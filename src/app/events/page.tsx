@@ -1,7 +1,9 @@
 // src/app/events/page.tsx — Events page (route: /events)
 
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { getEvents } from '@/services/eventService';
+import { getServerUser } from '@/lib/supabase/auth';
 import EventCalendar from '@/components/features/events/EventCalendar';
 import SectionTitle from '@/components/ui/SectionTitle';
 
@@ -11,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 export default async function EventsPage() {
-  const events = await getEvents();
+  const [events, user] = await Promise.all([getEvents(), getServerUser()]);
 
   return (
     <>
@@ -39,20 +41,36 @@ export default async function EventsPage() {
         />
 
         <div className="relative max-w-7xl mx-auto px-5 md:px-8">
-          <SectionTitle
-            pixelLabel="Calendrier"
-            title="Événements"
-          />
-          <p className="mt-4 text-body text-text-secondary max-w-xl">
-            Soirées, workshops, hackathons, conférences — retrouve tous les événements du BDE,
-            de l&apos;université et de Bordeaux.
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
+            <div>
+              <SectionTitle
+                pixelLabel="Calendrier"
+                title="Événements"
+              />
+              <p className="mt-4 text-body text-text-secondary max-w-xl">
+                Soirées, workshops, hackathons, conférences — retrouve tous les événements du BDE,
+                de l&apos;université et de Bordeaux.
+              </p>
+            </div>
+
+            {user && (
+              <Link
+                href="/events/new"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-brand-accent text-brand-dark font-medium text-small hover:bg-brand-accent/90 transition-colors duration-fast shrink-0"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+                Créer un événement
+              </Link>
+            )}
+          </div>
         </div>
       </section>
 
       {/* ── Events content ── */}
       <section className="max-w-7xl mx-auto px-5 md:px-8 pb-24">
-        <EventCalendar events={events} />
+        <EventCalendar events={events} currentUserId={user?.id} />
       </section>
     </>
   );

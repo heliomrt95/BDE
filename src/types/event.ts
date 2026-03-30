@@ -6,12 +6,16 @@ export interface Event {
   id: string;
   title: string;
   description?: string;
-  /** Display-ready date string (e.g. "27 mars 2026") */
   date: string;
-  startDate: string; // ISO 8601
-  endDate?: string;
+  start_date: string; // ISO 8601
+  end_date?: string;
   location?: string;
   category: EventCategory;
-  imageUrl?: string;
-  registrationUrl?: string;
+  image_url?: string;
+  registration_url?: string;
+  created_by?: string;
+  created_at?: string;
 }
+
+/** Shape for creating a new event */
+export type EventInsert = Omit<Event, 'id' | 'created_at'>;

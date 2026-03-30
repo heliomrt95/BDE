@@ -14,6 +14,9 @@ interface EventCardProps {
   event: Event;
   variant?: 'image' | 'compact';
   className?: string;
+  canDelete?: boolean;
+  onDelete?: () => void;
+  deleting?: boolean;
 }
 
 const categoryVariant: Record<EventCategory, 'bde' | 'university' | 'bordeaux'> = {
@@ -28,9 +31,9 @@ const categoryGradient: Record<EventCategory, string> = {
   bordeaux: 'from-[#c0392b]/20 via-brand-dark/80 to-brand-dark',
 };
 
-export default function EventCard({ event, variant = 'image', className }: EventCardProps) {
+export default function EventCard({ event, variant = 'image', className, canDelete, onDelete, deleting }: EventCardProps) {
   if (variant === 'compact') {
-    return <CompactCard event={event} className={className} />;
+    return <CompactCard event={event} className={className} canDelete={canDelete} onDelete={onDelete} deleting={deleting} />;
   }
 
   return (
@@ -114,6 +117,28 @@ export default function EventCard({ event, variant = 'image', className }: Event
         </div>
       </div>
 
+      {/* Delete button */}
+      {canDelete && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onDelete?.(); }}
+          disabled={deleting}
+          aria-label="Supprimer l'événement"
+          className={cn(
+            'absolute top-4 right-4 z-10 p-2 rounded-md',
+            'bg-red-500/20 text-red-400 border border-red-500/30',
+            'opacity-0 group-hover:opacity-100 transition-all duration-fast',
+            'hover:bg-red-500/30 hover:text-red-300',
+            'disabled:opacity-50 disabled:cursor-not-allowed',
+          )}
+        >
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="3 6 5 6 21 6" />
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+            <path d="M10 11v6M14 11v6" />
+          </svg>
+        </button>
+      )}
+
       {/* Bottom accent line */}
       <div
         className={cn(
@@ -130,7 +155,7 @@ export default function EventCard({ event, variant = 'image', className }: Event
 }
 
 /* ── Compact variant (no image) ── */
-function CompactCard({ event, className }: { event: Event; className?: string }) {
+function CompactCard({ event, className, canDelete, onDelete, deleting }: { event: Event; className?: string; canDelete?: boolean; onDelete?: () => void; deleting?: boolean }) {
   return (
     <article
       className={cn(
@@ -150,6 +175,28 @@ function CompactCard({ event, className }: { event: Event; className?: string })
           event.category === 'bordeaux' && 'from-[#c0392b] via-[#c0392b]/40 to-transparent',
         )}
       />
+
+      {/* Delete button */}
+      {canDelete && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onDelete?.(); }}
+          disabled={deleting}
+          aria-label="Supprimer l'événement"
+          className={cn(
+            'absolute top-3 right-3 z-10 p-1.5 rounded-md',
+            'bg-red-500/20 text-red-400 border border-red-500/30',
+            'opacity-0 group-hover:opacity-100 transition-all duration-fast',
+            'hover:bg-red-500/30 hover:text-red-300',
+            'disabled:opacity-50 disabled:cursor-not-allowed',
+          )}
+        >
+          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="3 6 5 6 21 6" />
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+            <path d="M10 11v6M14 11v6" />
+          </svg>
+        </button>
+      )}
 
       <div className="p-5 pl-7">
         <div className="flex items-center justify-between mb-3">
