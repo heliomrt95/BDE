@@ -44,7 +44,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       <div className={cn('relative aspect-square overflow-hidden', imageClass)}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={product.imageUrl}
+          src={product.image_url}
           alt={product.name}
           className={cn(
             'w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105',

@@ -19,7 +19,7 @@ const EMPTY_FORM: ProductInsert = {
   name: '',
   description: '',
   price: 0,
-  imageUrl: '',
+  image_url: '',
   status: 'available',
   sizes: [],
   colors: [],
@@ -130,8 +130,8 @@ export default function ProductsPanel() {
             <ImageUpload
               folder="products"
               label="Image du produit"
-              value={form.imageUrl}
-              onChange={(url) => setForm((f) => ({ ...f, imageUrl: url }))}
+              value={form.image_url}
+              onChange={(url) => setForm((f) => ({ ...f, image_url: url }))}
             />
             <div className="flex flex-col gap-1.5">
               <label htmlFor="status" className="text-small font-medium text-text-secondary">Statut</label>

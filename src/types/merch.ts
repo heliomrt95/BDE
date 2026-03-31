@@ -7,7 +7,7 @@ export interface Product {
   name: string;
   description: string;
   price: number; // in euros
-  imageUrl: string;
+  image_url: string;
   status: ProductStatus;
   sizes?: string[];
   colors?: string[];
