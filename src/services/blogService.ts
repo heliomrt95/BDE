@@ -120,7 +120,7 @@ export async function getPosts(): Promise<Post[]> {
       .lte('published_at', new Date().toISOString())
       .order('published_at', { ascending: false });
 
-    if (error || !data?.length) return MOCK_POSTS;
+    if (error) return MOCK_POSTS;
     return data as Post[];
   } catch {
     return MOCK_POSTS;
@@ -138,9 +138,7 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
       .lte('published_at', new Date().toISOString())
       .single();
 
-    if (error || !data) {
-      return MOCK_POSTS.find((p) => p.slug === slug) ?? null;
-    }
+    if (error || !data) return null;
     return data as Post;
   } catch {
     return MOCK_POSTS.find((p) => p.slug === slug) ?? null;

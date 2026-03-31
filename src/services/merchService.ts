@@ -16,10 +16,32 @@ const MOCK_PRODUCTS: Product[] = [
 ];
 
 export async function getProducts(): Promise<Product[]> {
-  // TODO: replace with Supabase query
-  return MOCK_PRODUCTS;
+  try {
+    const { createClient } = await import('@/lib/supabase/server');
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .order('name', { ascending: true });
+    if (error) return MOCK_PRODUCTS;
+    return data as Product[];
+  } catch {
+    return MOCK_PRODUCTS;
+  }
 }
 
 export async function getProductById(id: string): Promise<Product | null> {
-  return MOCK_PRODUCTS.find((p) => p.id === id) ?? null;
+  try {
+    const { createClient } = await import('@/lib/supabase/server');
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('id', id)
+      .single();
+    if (error || !data) return null;
+    return data as Product;
+  } catch {
+    return null;
+  }
 }
