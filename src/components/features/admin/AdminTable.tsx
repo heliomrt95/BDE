@@ -75,12 +75,13 @@ export default function AdminTable<T>({
 export function Td({
   children,
   className,
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
+  ...props
+}: React.TdHTMLAttributes<HTMLTableCellElement>) {
   return (
-    <td className={cn('px-4 py-3 text-brand-light/80 align-middle', className)}>
+    <td
+      className={cn('px-4 py-3 text-brand-light/80 align-middle', className)}
+      {...props}
+    >
       {children}
     </td>
   );
