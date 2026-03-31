@@ -1,8 +1,4 @@
 // src/components/features/events/EventCalendar.tsx
-// ─────────────────────────────────────────────────────
-// Main events container — client component that handles
-// filtering, view mode toggle, and rendering.
-// ─────────────────────────────────────────────────────
 
 'use client';
 
@@ -17,27 +13,11 @@ type ViewMode = 'grid' | 'list';
 
 interface EventCalendarProps {
   events: Event[];
-  isAdmin?: boolean;
 }
 
-export default function EventCalendar({ events, isAdmin }: EventCalendarProps) {
+export default function EventCalendar({ events }: EventCalendarProps) {
   const [activeFilters, setActiveFilters] = useState<EventCategory[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-
-  async function handleDelete(id: string) {
-    if (!confirm('Supprimer cet événement ?')) return;
-    setDeletingId(id);
-    try {
-      const { deleteEvent } = await import('@/services/eventService.client');
-      await deleteEvent(id);
-      window.location.reload();
-    } catch (err) {
-      alert(err instanceof Error ? err.message : 'Erreur lors de la suppression.');
-    } finally {
-      setDeletingId(null);
-    }
-  }
 
   const filteredEvents = useMemo(() => {
     if (activeFilters.length === 0) return events;
@@ -77,7 +57,6 @@ export default function EventCalendar({ events, isAdmin }: EventCalendarProps) {
                   : 'text-text-muted hover:text-white',
               )}
             >
-              {/* Grid icon */}
               <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
                 <rect x="1" y="1" width="6" height="6" rx="1" />
                 <rect x="9" y="1" width="6" height="6" rx="1" />
@@ -95,7 +74,6 @@ export default function EventCalendar({ events, isAdmin }: EventCalendarProps) {
                   : 'text-text-muted hover:text-white',
               )}
             >
-              {/* List icon */}
               <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
                 <rect x="1" y="1" width="14" height="3" rx="1" />
                 <rect x="1" y="6.5" width="14" height="3" rx="1" />
@@ -121,15 +99,11 @@ export default function EventCalendar({ events, isAdmin }: EventCalendarProps) {
               <EventCard
                 event={event}
                 variant={viewMode === 'grid' ? 'image' : 'compact'}
-                canDelete={!!isAdmin}
-                onDelete={() => handleDelete(event.id)}
-                deleting={deletingId === event.id}
               />
             </StaggerItem>
           ))}
         </Stagger>
       ) : (
-        /* Empty state */
         <FadeIn>
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <span className="pixel-text text-pixel-xl text-brand-mid/40 mb-4" aria-hidden="true">
