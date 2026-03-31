@@ -132,7 +132,7 @@ export default function HeroBanner() {
       </div>
 
       {/* Scroll indicator — anchored to section bottom */}
-      <FadeIn delay={0.5} className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10">
+      <FadeIn delay={0.5} className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 w-fit">
         <div className="flex flex-col items-center gap-2">
           <span className="pixel-text text-pixel-sm text-text-muted uppercase tracking-widest">
             Scroll

@@ -36,11 +36,18 @@ export default function LoginForm() {
 
   return (
     <div className={cn(
-      'rounded-xl p-8 md:p-10',
+      'rounded-xl overflow-hidden',
       'bg-surface-raised/40 border border-border/50',
       'backdrop-blur-lg',
     )}>
+      {/* Accent top bar */}
+      <div className="h-[3px] w-full bg-gradient-to-r from-brand-accent via-brand-mid to-transparent" />
+
+      <div className="p-8 md:p-10">
       <div className="text-center mb-8">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-brand-accent/10 border border-brand-accent/20 mb-4">
+          <span className="pixel-text text-pixel-md text-brand-accent">→</span>
+        </div>
         <h1 className="font-display text-display-md text-white mb-2">Connexion</h1>
         <p className="text-small text-text-secondary">
           Accède à ton espace BDE
@@ -52,7 +59,7 @@ export default function LoginForm() {
           id="login-email"
           label="Email"
           type="email"
-          placeholder="ton.email@etu.u-bordeaux-montaigne.fr"
+          placeholder="exemple@email.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -106,6 +113,7 @@ export default function LoginForm() {
           S&apos;inscrire
         </Link>
       </p>
+      </div>
     </div>
   );
 }

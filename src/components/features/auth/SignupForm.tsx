@@ -45,38 +45,51 @@ export default function SignupForm() {
   if (success) {
     return (
       <div className={cn(
-        'rounded-xl p-8 md:p-10 text-center',
+        'rounded-xl overflow-hidden text-center',
         'bg-surface-raised/40 border border-border/50',
         'backdrop-blur-lg',
       )}>
-        <div className="pixel-text text-pixel-xl text-brand-accent mb-4">✓</div>
-        <h1 className="font-display text-display-md text-white mb-3">Inscription réussie</h1>
-        <p className="text-body text-text-secondary mb-6">
-          Un email de confirmation a été envoyé à <strong className="text-white">{email}</strong>.
-          Vérifie ta boîte mail pour activer ton compte.
-        </p>
-        <Link
-          href="/login"
-          className={cn(
-            'inline-flex items-center px-6 py-3 rounded-lg font-medium text-body',
-            'bg-brand-accent text-brand-dark',
-            'hover:bg-[#ffe14d] transition-colors duration-fast',
-            'focus-brand',
-          )}
-        >
-          Aller à la connexion
-        </Link>
+        <div className="h-[3px] w-full bg-gradient-to-r from-brand-accent via-brand-mid to-transparent" />
+        <div className="p-8 md:p-10">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-brand-accent/15 border border-brand-accent/30 mb-5">
+            <span className="pixel-text text-pixel-xl text-brand-accent">✓</span>
+          </div>
+          <h1 className="font-display text-display-md text-white mb-3">Inscription réussie !</h1>
+          <p className="text-body text-text-secondary mb-6">
+            Un email de confirmation a été envoyé à{' '}
+            <strong className="text-white">{email}</strong>.{' '}
+            Vérifie ta boîte mail pour activer ton compte.
+          </p>
+          <Link
+            href="/login"
+            className={cn(
+              'inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium text-body',
+              'bg-brand-accent text-brand-dark',
+              'hover:bg-[#ffe14d] transition-colors duration-fast',
+              'focus-brand',
+            )}
+          >
+            Se connecter <span aria-hidden="true">→</span>
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
     <div className={cn(
-      'rounded-xl p-8 md:p-10',
+      'rounded-xl overflow-hidden',
       'bg-surface-raised/40 border border-border/50',
       'backdrop-blur-lg',
     )}>
+      {/* Accent top bar */}
+      <div className="h-[3px] w-full bg-gradient-to-r from-brand-mid via-brand-accent to-transparent" />
+
+      <div className="p-8 md:p-10">
       <div className="text-center mb-8">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-brand-mid/15 border border-brand-mid/30 mb-4">
+          <span className="pixel-text text-pixel-md text-brand-light">+</span>
+        </div>
         <h1 className="font-display text-display-md text-white mb-2">Inscription</h1>
         <p className="text-small text-text-secondary">
           Crée ton compte pour rejoindre le BDE
@@ -100,7 +113,7 @@ export default function SignupForm() {
           id="signup-email"
           label="Email"
           type="email"
-          placeholder="ton.email@etu.u-bordeaux-montaigne.fr"
+          placeholder="exemple@email.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -155,6 +168,7 @@ export default function SignupForm() {
           Se connecter
         </Link>
       </p>
+      </div>
     </div>
   );
 }

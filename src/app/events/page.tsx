@@ -6,6 +6,7 @@ import { getEvents } from '@/services/eventService';
 import { getServerUser } from '@/lib/supabase/auth';
 import EventCalendar from '@/components/features/events/EventCalendar';
 import SectionTitle from '@/components/ui/SectionTitle';
+import { FadeIn, SlideIn } from '@/components/motion/ScrollReveal';
 
 export const metadata: Metadata = {
   title: 'Événements',
@@ -42,27 +43,31 @@ export default async function EventsPage() {
 
         <div className="relative max-w-7xl mx-auto px-5 md:px-8">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
-            <div>
-              <SectionTitle
-                pixelLabel="Calendrier"
-                title="Événements"
-              />
-              <p className="mt-4 text-body text-text-secondary max-w-xl">
-                Soirées, workshops, hackathons, conférences — retrouve tous les événements du BDE,
-                de l&apos;université et de Bordeaux.
-              </p>
-            </div>
+            <FadeIn>
+              <div>
+                <SectionTitle
+                  pixelLabel="Calendrier"
+                  title="Événements"
+                />
+                <p className="mt-4 text-body text-text-secondary max-w-xl">
+                  Soirées, workshops, hackathons, conférences — retrouve tous les événements du BDE,
+                  de l&apos;université et de Bordeaux.
+                </p>
+              </div>
+            </FadeIn>
 
             {user && (
-              <Link
-                href="/events/new"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-brand-accent text-brand-dark font-medium text-small hover:bg-brand-accent/90 transition-colors duration-fast shrink-0"
-              >
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                  <path d="M12 5v14M5 12h14" />
-                </svg>
-                Créer un événement
-              </Link>
+              <SlideIn from="right" delay={0.1}>
+                <Link
+                  href="/events/new"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-brand-accent text-brand-dark font-medium text-small hover:bg-brand-accent/90 transition-colors duration-fast shrink-0"
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                    <path d="M12 5v14M5 12h14" />
+                  </svg>
+                  Créer un événement
+                </Link>
+              </SlideIn>
             )}
           </div>
         </div>

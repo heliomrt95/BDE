@@ -9,6 +9,7 @@
 import { useMemo, useState } from 'react';
 import EventCard from './EventCard';
 import EventFilters, { type EventCategory } from './EventFilters';
+import { Stagger, StaggerItem, FadeIn } from '@/components/motion/ScrollReveal';
 import { cn } from '@/lib/utils/cn';
 import type { Event } from '@/types/event';
 
@@ -107,41 +108,44 @@ export default function EventCalendar({ events, currentUserId }: EventCalendarPr
 
       {/* ── Event grid / list ── */}
       {filteredEvents.length > 0 ? (
-        <div
+        <Stagger
+          stagger={0.07}
           className={cn(
-            'stagger-children',
             viewMode === 'grid'
               ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5'
               : 'flex flex-col gap-4 max-w-3xl',
           )}
         >
           {filteredEvents.map((event) => (
-            <EventCard
-              key={event.id}
-              event={event}
-              variant={viewMode === 'grid' ? 'image' : 'compact'}
-              canDelete={!!currentUserId && event.created_by === currentUserId}
-              onDelete={() => handleDelete(event.id)}
-              deleting={deletingId === event.id}
-            />
+            <StaggerItem key={event.id}>
+              <EventCard
+                event={event}
+                variant={viewMode === 'grid' ? 'image' : 'compact'}
+                canDelete={!!currentUserId && event.created_by === currentUserId}
+                onDelete={() => handleDelete(event.id)}
+                deleting={deletingId === event.id}
+              />
+            </StaggerItem>
           ))}
-        </div>
+        </Stagger>
       ) : (
         /* Empty state */
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <span className="pixel-text text-pixel-xl text-brand-mid/40 mb-4" aria-hidden="true">
-            ¯\_(ツ)_/¯
-          </span>
-          <p className="text-body text-text-secondary mb-2">
-            Aucun événement pour ces filtres.
-          </p>
-          <button
-            onClick={() => setActiveFilters([])}
-            className="text-small text-brand-accent hover:underline focus-brand rounded-sm"
-          >
-            Réinitialiser les filtres
-          </button>
-        </div>
+        <FadeIn>
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <span className="pixel-text text-pixel-xl text-brand-mid/40 mb-4" aria-hidden="true">
+              ¯\_(ツ)_/¯
+            </span>
+            <p className="text-body text-text-secondary mb-2">
+              Aucun événement pour ces filtres.
+            </p>
+            <button
+              onClick={() => setActiveFilters([])}
+              className="text-small text-brand-accent hover:underline focus-brand rounded-sm"
+            >
+              Réinitialiser les filtres
+            </button>
+          </div>
+        </FadeIn>
       )}
     </div>
   );

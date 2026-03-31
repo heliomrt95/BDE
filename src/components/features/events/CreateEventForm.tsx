@@ -69,11 +69,12 @@ export default function CreateEventForm({ userId }: CreateEventFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className={cn(
-      'rounded-xl p-6 md:p-8',
+      'rounded-xl overflow-hidden',
       'bg-surface-raised/40 border border-border/50',
       'backdrop-blur-lg',
-      'flex flex-col gap-5',
     )}>
+      <div className="h-[3px] w-full bg-gradient-to-r from-brand-accent via-brand-mid to-transparent" />
+      <div className="p-6 md:p-8 flex flex-col gap-5">
       <Input
         id="event-title"
         label="Titre"
@@ -201,6 +202,7 @@ export default function CreateEventForm({ userId }: CreateEventFormProps) {
           'Créer l\'événement'
         )}
       </Button>
+      </div>
     </form>
   );
 }
