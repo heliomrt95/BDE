@@ -1,0 +1,179 @@
+// src/services/adminService.ts
+// Client-side Supabase mutations for admin CRUD operations.
+
+import { createClient } from '@/lib/supabase/client';
+import type { Event, EventInsert, Post, Product } from '@/types';
+
+// ── Error mapping ─────────────────────────────────────────────────────────────
+
+function friendlyError(error: { code?: string; message?: string }): string {
+  switch (error.code) {
+    case '23505': return 'Cette entrée existe déjà (doublon). Vérifie le slug ou l\'identifiant.';
+    case '23502': return 'Un champ obligatoire est manquant.';
+    case '23503': return 'Référence invalide — l\'élément lié n\'existe pas.';
+    case '42501': return 'Permission refusée. Vérifie que tu es bien connecté en tant qu\'admin.';
+    case 'PGRST116': return 'Aucun résultat trouvé.';
+    default: return error.message ?? 'Une erreur inattendue s\'est produite.';
+  }
+}
+
+// ── Validation helpers ────────────────────────────────────────────────────────
+
+const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+function validatePost(post: Omit<Post, 'id' | 'created_at'>): string | null {
+  if (!post.title.trim()) return 'Le titre est requis.';
+  if (!post.slug.trim()) return 'Le slug est requis.';
+  if (!SLUG_RE.test(post.slug)) return 'Le slug ne peut contenir que des lettres minuscules, chiffres et tirets.';
+  if (!post.content.trim()) return 'Le contenu est requis.';
+  if (!post.author.trim()) return 'L\'auteur est requis.';
+  return null;
+}
+
+function validateProduct(product: Omit<Product, 'id'>): string | null {
+  if (!product.name.trim()) return 'Le nom est requis.';
+  if (product.price < 0) return 'Le prix ne peut pas être négatif.';
+  return null;
+}
+
+function validateEvent(event: EventInsert): string | null {
+  if (!event.title.trim()) return 'Le titre est requis.';
+  if (!event.start_date) return 'La date de début est requise.';
+  return null;
+}
+
+// ── Events ────────────────────────────────────────────────────────────────────
+
+export async function adminCreateEvent(event: EventInsert): Promise<Event> {
+  const err = validateEvent(event);
+  if (err) throw new Error(err);
+
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('events')
+    .insert(event)
+    .select()
+    .single();
+  if (error) throw new Error(friendlyError(error));
+  return data as Event;
+}
+
+export async function adminUpdateEvent(id: string, event: Partial<EventInsert>): Promise<Event> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('events')
+    .update(event)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw new Error(friendlyError(error));
+  return data as Event;
+}
+
+export async function adminDeleteEvent(id: string): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase.from('events').delete().eq('id', id);
+  if (error) throw new Error(friendlyError(error));
+}
+
+export async function adminGetEvents(): Promise<Event[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('events')
+    .select('*')
+    .order('start_date', { ascending: false });
+  if (error) throw new Error(friendlyError(error));
+  return (data ?? []) as Event[];
+}
+
+// ── Posts ─────────────────────────────────────────────────────────────────────
+
+export type PostInsert = Omit<Post, 'id' | 'created_at'>;
+
+export async function adminCreatePost(post: PostInsert): Promise<Post> {
+  const err = validatePost(post);
+  if (err) throw new Error(err);
+
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('posts')
+    .insert(post)
+    .select()
+    .single();
+  if (error) throw new Error(friendlyError(error));
+  return data as Post;
+}
+
+export async function adminUpdatePost(id: string, post: Partial<PostInsert>): Promise<Post> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('posts')
+    .update(post)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw new Error(friendlyError(error));
+  return data as Post;
+}
+
+export async function adminDeletePost(id: string): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase.from('posts').delete().eq('id', id);
+  if (error) throw new Error(friendlyError(error));
+}
+
+export async function adminGetPosts(): Promise<Post[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('posts')
+    .select('*')
+    .order('published_at', { ascending: false });
+  if (error) throw new Error(friendlyError(error));
+  return (data ?? []) as Post[];
+}
+
+// ── Products ──────────────────────────────────────────────────────────────────
+
+export type ProductInsert = Omit<Product, 'id'>;
+
+export async function adminCreateProduct(product: ProductInsert): Promise<Product> {
+  const err = validateProduct(product);
+  if (err) throw new Error(err);
+
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('products')
+    .insert(product)
+    .select()
+    .single();
+  if (error) throw new Error(friendlyError(error));
+  return data as Product;
+}
+
+export async function adminUpdateProduct(id: string, product: Partial<ProductInsert>): Promise<Product> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('products')
+    .update(product)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw new Error(friendlyError(error));
+  return data as Product;
+}
+
+export async function adminDeleteProduct(id: string): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase.from('products').delete().eq('id', id);
+  if (error) throw new Error(friendlyError(error));
+}
+
+export async function adminGetProducts(): Promise<Product[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .order('name', { ascending: true });
+  if (error) throw new Error(friendlyError(error));
+  return (data ?? []) as Product[];
+}

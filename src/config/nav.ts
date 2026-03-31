@@ -14,5 +14,4 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Portfolio', href: '/portfolio' },
   { label: 'Blog', href: '/blog' },
   { label: 'Boutique', href: '/merch' },
-  { label: 'Menu CROUS', href: '/lunch' },
 ];
