@@ -5,6 +5,7 @@ import { adminGetProducts, adminCreateProduct, adminDeleteProduct, type ProductI
 import type { Product } from '@/types';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import ImageUpload from '@/components/ui/ImageUpload';
 import AdminTable, { Td } from './AdminTable';
 import { cn } from '@/lib/utils/cn';
 
@@ -126,7 +127,12 @@ export default function ProductsPanel() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input id="name" name="name" label="Nom *" value={form.name} onChange={handleChange} required />
             <Input id="price" name="price" label="Prix (€)" type="number" min="0" step="0.01" value={form.price} onChange={handleChange} />
-            <Input id="imageUrl" name="imageUrl" label="Image URL" value={form.imageUrl} onChange={handleChange} />
+            <ImageUpload
+              folder="products"
+              label="Image du produit"
+              value={form.imageUrl}
+              onChange={(url) => setForm((f) => ({ ...f, imageUrl: url }))}
+            />
             <div className="flex flex-col gap-1.5">
               <label htmlFor="status" className="text-small font-medium text-text-secondary">Statut</label>
               <select

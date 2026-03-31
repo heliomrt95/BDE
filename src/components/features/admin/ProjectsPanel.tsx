@@ -1,38 +1,42 @@
 'use client';
 
 import { useState, useEffect, useTransition } from 'react';
-import { adminGetEvents, adminCreateEvent, adminDeleteEvent } from '@/services/adminService';
-import type { Event, EventInsert } from '@/types';
+import { adminGetProjects, adminCreateProject, adminDeleteProject, type ProjectInsert } from '@/services/adminService';
+import type { Project } from '@/types';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import ImageUpload from '@/components/ui/ImageUpload';
 import AdminTable, { Td } from './AdminTable';
-import { cn } from '@/lib/utils/cn';
 
-const CATEGORY_LABELS: Record<string, { label: string; className: string }> = {
-  bde: { label: 'BDE', className: 'bg-brand-mid/30 text-brand-light/80' },
-  university: { label: 'Université', className: 'bg-emerald-500/15 text-emerald-300' },
-  bordeaux: { label: 'Bordeaux', className: 'bg-orange-400/15 text-orange-300' },
+const TYPE_LABELS: Record<string, string> = {
+  web: 'Web',
+  design: 'Design',
+  video: 'Vidéo',
+  photo: 'Photo',
+  other: 'Autre',
 };
 
-const EMPTY_FORM: EventInsert = {
+const EMPTY_FORM: ProjectInsert = {
   title: '',
   description: '',
-  date: '',
-  start_date: '',
-  end_date: '',
-  location: '',
-  category: 'bde',
+  author: '',
+  authors: [],
+  year: '',
+  type: 'web',
+  tags: [],
+  thumbnail: '',
   image_url: '',
-  registration_url: '',
+  project_url: '',
 };
 
-export default function EventsPanel() {
-  const [events, setEvents] = useState<Event[]>([]);
+export default function ProjectsPanel() {
+  const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState<EventInsert>(EMPTY_FORM);
+  const [form, setForm] = useState<ProjectInsert>(EMPTY_FORM);
+  const [tagsRaw, setTagsRaw] = useState('');
+  const [authorsRaw, setAuthorsRaw] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -41,8 +45,8 @@ export default function EventsPanel() {
     try {
       setLoading(true);
       setError(null);
-      const data = await adminGetEvents();
-      setEvents(data);
+      const data = await adminGetProjects();
+      setProjects(data);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erreur de chargement');
     } finally {
@@ -58,16 +62,20 @@ export default function EventsPanel() {
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.title.trim() || !form.start_date) {
-      setFormError('Titre et date de début requis.');
+    if (!form.title.trim() || !form.author.trim()) {
+      setFormError('Titre et auteur requis.');
       return;
     }
     setFormError(null);
+    const tags = tagsRaw.split(',').map((t) => t.trim()).filter(Boolean);
+    const authors = authorsRaw.split(',').map((a) => a.trim()).filter(Boolean);
     startTransition(async () => {
       try {
-        const created = await adminCreateEvent(form);
-        setEvents((prev) => [created, ...prev]);
+        const created = await adminCreateProject({ ...form, tags, authors });
+        setProjects((prev) => [created, ...prev]);
         setForm(EMPTY_FORM);
+        setTagsRaw('');
+        setAuthorsRaw('');
         setShowForm(false);
       } catch (e) {
         setFormError(e instanceof Error ? e.message : 'Erreur lors de la création');
@@ -78,8 +86,8 @@ export default function EventsPanel() {
   async function handleDelete(id: string) {
     startTransition(async () => {
       try {
-        await adminDeleteEvent(id);
-        setEvents((prev) => prev.filter((ev) => ev.id !== id));
+        await adminDeleteProject(id);
+        setProjects((prev) => prev.filter((p) => p.id !== id));
         setDeleteConfirm(null);
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Erreur lors de la suppression');
@@ -88,11 +96,11 @@ export default function EventsPanel() {
   }
 
   const columns = [
-    { key: 'title', label: 'Titre' },
-    { key: 'category', label: 'Catégorie', width: 'w-28' },
-    { key: 'date', label: 'Date', width: 'w-36' },
-    { key: 'location', label: 'Lieu' },
-    { key: 'actions', label: '', width: 'w-32' },
+    { key: 'title', label: 'Projet' },
+    { key: 'author', label: 'Auteur', width: 'w-32' },
+    { key: 'type', label: 'Type', width: 'w-24' },
+    { key: 'year', label: 'Année', width: 'w-24' },
+    { key: 'actions', label: '', width: 'w-28' },
   ];
 
   return (
@@ -100,15 +108,15 @@ export default function EventsPanel() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-display text-white text-xl">Événements</h2>
-          <p className="text-brand-light/50 text-xs mt-0.5">{events.length} au total</p>
+          <h2 className="font-display text-white text-xl">Portfolio</h2>
+          <p className="text-brand-light/50 text-xs mt-0.5">{projects.length} projets</p>
         </div>
         <Button
           variant={showForm ? 'secondary' : 'primary'}
           size="sm"
           onClick={() => { setShowForm((v) => !v); setFormError(null); }}
         >
-          {showForm ? 'Annuler' : '+ Nouvel événement'}
+          {showForm ? 'Annuler' : '+ Nouveau projet'}
         </Button>
       </div>
 
@@ -118,50 +126,52 @@ export default function EventsPanel() {
           onSubmit={handleCreate}
           className="rounded-xl border border-brand-mid/30 bg-brand-mid/10 p-5 flex flex-col gap-4"
         >
-          <p className="font-pixel text-[10px] uppercase tracking-widest text-brand-accent">Nouvel événement</p>
+          <p className="font-pixel text-[10px] uppercase tracking-widest text-brand-accent">Nouveau projet</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input id="title" name="title" label="Titre *" value={form.title} onChange={handleChange} required />
-            <Input id="location" name="location" label="Lieu" value={form.location ?? ''} onChange={handleChange} />
-            <Input id="start_date" name="start_date" label="Début *" type="datetime-local" value={form.start_date} onChange={handleChange} required />
-            <Input id="end_date" name="end_date" label="Fin" type="datetime-local" value={form.end_date ?? ''} onChange={handleChange} />
-            <Input id="date" name="date" label="Date affichée" placeholder="ex: 15 sept. 2026" value={form.date} onChange={handleChange} />
+            <Input id="author" name="author" label="Auteur principal *" value={form.author} onChange={handleChange} required />
+            <Input id="authorsRaw" name="authorsRaw" label="Équipe (séparés par virgule)" value={authorsRaw} onChange={(e) => setAuthorsRaw(e.target.value)} placeholder="Léa M., Hugo T." />
+            <Input id="year" name="year" label="Année" placeholder="2025–2026" value={form.year} onChange={handleChange} />
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="category" className="text-small font-medium text-text-secondary">Catégorie</label>
+              <label htmlFor="type" className="text-small font-medium text-text-secondary">Type</label>
               <select
-                id="category"
-                name="category"
-                value={form.category}
+                id="type"
+                name="type"
+                value={form.type}
                 onChange={handleChange}
                 className="w-full bg-surface-raised/60 text-white border border-border rounded-md px-4 py-2.5 text-body transition-all duration-fast ease-smooth focus:outline-none focus:border-brand-mid focus:bg-surface-raised focus:shadow-glow-purple"
               >
-                <option value="bde">BDE</option>
-                <option value="university">Université</option>
-                <option value="bordeaux">Bordeaux</option>
+                <option value="web">Web</option>
+                <option value="design">Design</option>
+                <option value="video">Vidéo</option>
+                <option value="photo">Photo</option>
+                <option value="other">Autre</option>
               </select>
             </div>
-            <Input id="registration_url" name="registration_url" label="Lien inscription" value={form.registration_url ?? ''} onChange={handleChange} />
+            <Input id="tagsRaw" name="tagsRaw" label="Tags (séparés par virgule)" value={tagsRaw} onChange={(e) => setTagsRaw(e.target.value)} placeholder="UX, Next.js, Figma" />
+            <Input id="project_url" name="project_url" label="Lien du projet" value={form.project_url ?? ''} onChange={handleChange} />
           </div>
           <div className="flex flex-col gap-1.5">
             <label htmlFor="description" className="text-small font-medium text-text-secondary">Description</label>
             <textarea
               id="description"
               name="description"
-              value={form.description ?? ''}
+              value={form.description}
               onChange={handleChange}
               rows={3}
               className="w-full bg-surface-raised/60 text-white border border-border rounded-md px-4 py-2.5 text-body transition-all duration-fast ease-smooth focus:outline-none focus:border-brand-mid focus:bg-surface-raised focus:shadow-glow-purple resize-none placeholder:text-text-muted"
             />
           </div>
           <ImageUpload
-            folder="events"
-            label="Image de l'événement"
-            value={form.image_url ?? ''}
-            onChange={(url) => setForm((f) => ({ ...f, image_url: url }))}
+            folder="projects"
+            label="Image du projet (thumbnail)"
+            value={form.thumbnail}
+            onChange={(url) => setForm((f) => ({ ...f, thumbnail: url }))}
           />
           {formError && <p className="text-red-400 text-xs">{formError}</p>}
           <div className="flex gap-3">
             <Button type="submit" variant="accent" size="sm" disabled={isPending}>
-              {isPending ? 'Création…' : 'Créer l\'événement'}
+              {isPending ? 'Création…' : 'Ajouter au portfolio'}
             </Button>
             <Button type="button" variant="ghost" size="sm" onClick={() => setShowForm(false)}>Annuler</Button>
           </div>
@@ -181,32 +191,35 @@ export default function EventsPanel() {
           {[...Array(4)].map((_, i) => (
             <div key={i} className={`flex gap-4 px-4 py-3.5 ${i < 3 ? 'border-b border-brand-mid/10' : ''} ${i % 2 !== 0 ? 'bg-brand-mid/5' : ''}`}>
               <div className="h-4 w-48 rounded bg-brand-mid/20 animate-pulse" />
-              <div className="h-4 w-20 rounded bg-brand-mid/15 animate-pulse" />
               <div className="h-4 w-24 rounded bg-brand-mid/15 animate-pulse" />
-              <div className="h-4 w-32 rounded bg-brand-mid/10 animate-pulse" />
+              <div className="h-4 w-16 rounded bg-brand-mid/15 animate-pulse" />
+              <div className="h-4 w-20 rounded bg-brand-mid/10 animate-pulse" />
             </div>
           ))}
         </div>
       ) : (
         <AdminTable
           columns={columns}
-          rows={events}
-          emptyMessage="Aucun événement. Crée le premier !"
-          renderRow={(ev) => (
+          rows={projects}
+          emptyMessage="Aucun projet. Ajoute le premier !"
+          renderRow={(project) => (
             <>
-              <Td className="font-medium text-white max-w-xs truncate" title={ev.title}>{ev.title}</Td>
-              <Td>
-                <span className={cn('px-2 py-0.5 rounded text-[10px] font-pixel uppercase tracking-wider', CATEGORY_LABELS[ev.category]?.className)}>
-                  {CATEGORY_LABELS[ev.category]?.label ?? ev.category}
-                </span>
+              <Td className="font-medium text-white max-w-xs truncate" title={project.title}>
+                <div className="flex items-center gap-2.5">
+                  {project.thumbnail && (
+                    <img src={project.thumbnail} alt="" className="w-8 h-8 rounded object-cover shrink-0" />
+                  )}
+                  {project.title}
+                </div>
               </Td>
-              <Td className="text-brand-light/60 text-xs">{ev.date || ev.start_date?.slice(0, 10)}</Td>
-              <Td className="text-brand-light/60 text-xs truncate max-w-[160px]" title={ev.location ?? undefined}>{ev.location ?? '—'}</Td>
+              <Td className="text-brand-light/60 text-xs">{project.author}</Td>
+              <Td className="text-brand-light/60 text-xs">{TYPE_LABELS[project.type] ?? project.type}</Td>
+              <Td className="text-brand-light/60 text-xs">{project.year || '—'}</Td>
               <Td>
-                {deleteConfirm === ev.id ? (
+                {deleteConfirm === project.id ? (
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => handleDelete(ev.id)}
+                      onClick={() => handleDelete(project.id)}
                       disabled={isPending}
                       className="text-xs text-red-400 hover:text-red-300 font-medium disabled:opacity-40"
                     >
@@ -222,7 +235,7 @@ export default function EventsPanel() {
                   </div>
                 ) : (
                   <button
-                    onClick={() => setDeleteConfirm(ev.id)}
+                    onClick={() => setDeleteConfirm(project.id)}
                     disabled={isPending}
                     className="text-xs text-brand-light/40 hover:text-red-400 transition-colors duration-150 disabled:opacity-40"
                   >

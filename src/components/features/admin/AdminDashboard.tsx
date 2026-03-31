@@ -5,13 +5,15 @@ import { cn } from '@/lib/utils/cn';
 import EventsPanel from './EventsPanel';
 import PostsPanel from './PostsPanel';
 import ProductsPanel from './ProductsPanel';
+import ProjectsPanel from './ProjectsPanel';
 
-type Tab = 'events' | 'posts' | 'products';
+type Tab = 'events' | 'posts' | 'products' | 'projects';
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'events', label: 'Événements' },
   { id: 'posts', label: 'Articles' },
   { id: 'products', label: 'Produits' },
+  { id: 'projects', label: 'Portfolio' },
 ];
 
 interface AdminDashboardProps {
@@ -60,6 +62,7 @@ export default function AdminDashboard({ userName }: AdminDashboardProps) {
         {tab === 'events' && <EventsPanel />}
         {tab === 'posts' && <PostsPanel />}
         {tab === 'products' && <ProductsPanel />}
+        {tab === 'projects' && <ProjectsPanel />}
       </div>
     </div>
   );

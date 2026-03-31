@@ -60,15 +60,27 @@ export default function ProjectCard({ project, featured = false, className }: Pr
         'relative overflow-hidden',
         featured ? 'aspect-[3/4] sm:aspect-[16/10]' : 'aspect-[3/4]',
       )}>
-        {/* Placeholder gradient */}
-        <div
-          className={cn(
-            'absolute inset-0 bg-gradient-to-br',
-            typeGradient[project.type],
-            'transition-transform duration-slow ease-smooth',
-            'group-hover:scale-105',
-          )}
-        />
+        {/* Background: real image if available, else gradient */}
+        {project.thumbnail ? (
+          <img
+            src={project.thumbnail}
+            alt={project.title}
+            className={cn(
+              'absolute inset-0 w-full h-full object-cover',
+              'transition-transform duration-slow ease-smooth',
+              'group-hover:scale-105',
+            )}
+          />
+        ) : (
+          <div
+            className={cn(
+              'absolute inset-0 bg-gradient-to-br',
+              typeGradient[project.type],
+              'transition-transform duration-slow ease-smooth',
+              'group-hover:scale-105',
+            )}
+          />
+        )}
 
         {/* ── Overlay layers ── */}
         {/* Base scrim — always visible */}
@@ -86,15 +98,6 @@ export default function ProjectCard({ project, featured = false, className }: Pr
           {project.tags.map((tag) => (
             <Badge key={tag} label={tag} variant="accent" compact />
           ))}
-        </div>
-
-        {/* ── Project number — top right ── */}
-        <div className={cn(
-          'absolute top-3 right-3',
-          'pixel-text text-pixel-sm text-white/10',
-          'group-hover:text-white/25 transition-colors duration-normal',
-        )}>
-          #{project.id.padStart(2, '0')}
         </div>
 
         {/* ── Content at bottom ── */}

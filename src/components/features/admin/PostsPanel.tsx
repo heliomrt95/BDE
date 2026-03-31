@@ -5,6 +5,7 @@ import { adminGetPosts, adminCreatePost, adminDeletePost, type PostInsert } from
 import type { Post } from '@/types';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import ImageUpload from '@/components/ui/ImageUpload';
 import AdminTable, { Td } from './AdminTable';
 
 const EMPTY_FORM: PostInsert = {
@@ -119,7 +120,12 @@ export default function PostsPanel() {
             <Input id="author" name="author" label="Auteur" value={form.author} onChange={handleChange} />
             <Input id="tagsRaw" name="tagsRaw" label="Tags (séparés par virgule)" value={tagsRaw} onChange={(e) => setTagsRaw(e.target.value)} placeholder="BDE, Design, Dev" />
             <Input id="published_at" name="published_at" label="Date de publication" type="datetime-local" value={form.published_at} onChange={handleChange} />
-            <Input id="cover_image_url" name="cover_image_url" label="Image de couverture" value={form.cover_image_url ?? ''} onChange={handleChange} />
+            <ImageUpload
+              folder="posts"
+              label="Image de couverture"
+              value={form.cover_image_url ?? ''}
+              onChange={(url) => setForm((f) => ({ ...f, cover_image_url: url }))}
+            />
           </div>
           <div className="flex flex-col gap-1.5">
             <label htmlFor="excerpt" className="text-small font-medium text-text-secondary">Extrait</label>

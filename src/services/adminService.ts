@@ -2,7 +2,7 @@
 // Client-side Supabase mutations for admin CRUD operations.
 
 import { createClient } from '@/lib/supabase/client';
-import type { Event, EventInsert, Post, Product } from '@/types';
+import type { Event, EventInsert, Post, Product, Project } from '@/types';
 
 // ── Error mapping ─────────────────────────────────────────────────────────────
 
@@ -176,4 +176,43 @@ export async function adminGetProducts(): Promise<Product[]> {
     .order('name', { ascending: true });
   if (error) throw new Error(friendlyError(error));
   return (data ?? []) as Product[];
+}
+
+// ── Projects ──────────────────────────────────────────────────────────────────
+
+export type ProjectInsert = Omit<Project, 'id' | 'created_at'>;
+
+function validateProject(p: ProjectInsert): string | null {
+  if (!p.title.trim()) return 'Le titre est requis.';
+  if (!p.author.trim()) return 'L\'auteur est requis.';
+  return null;
+}
+
+export async function adminGetProjects(): Promise<Project[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('projects')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) throw new Error(friendlyError(error));
+  return (data ?? []) as Project[];
+}
+
+export async function adminCreateProject(project: ProjectInsert): Promise<Project> {
+  const err = validateProject(project);
+  if (err) throw new Error(err);
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('projects')
+    .insert(project)
+    .select()
+    .single();
+  if (error) throw new Error(friendlyError(error));
+  return data as Project;
+}
+
+export async function adminDeleteProject(id: string): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase.from('projects').delete().eq('id', id);
+  if (error) throw new Error(friendlyError(error));
 }

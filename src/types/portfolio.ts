@@ -16,6 +16,7 @@ export interface Project {
   tags: string[];
   /** Card thumbnail URL */
   thumbnail: string;
-  imageUrl?: string;
-  projectUrl?: string;
+  image_url?: string;
+  project_url?: string;
+  created_at?: string;
 }
