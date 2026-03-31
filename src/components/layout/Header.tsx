@@ -120,21 +120,7 @@ export default function Header() {
                   Déco
                 </button>
               </>
-            ) : (
-              <Link
-                href="/login"
-                className={cn(
-                  'inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg',
-                  'text-small font-medium',
-                  'bg-brand-accent text-brand-dark',
-                  'hover:bg-[#ffe14d] hover:shadow-glow-accent',
-                  'transition-all duration-fast focus-brand',
-                )}
-              >
-                Connexion
-                <span aria-hidden="true" className="opacity-70">→</span>
-              </Link>
-            )}
+            ) : null}
           </div>
 
           {/* ── Hamburger ── */}
@@ -222,19 +208,7 @@ export default function Header() {
                 Déconnexion
               </button>
             </div>
-          ) : (
-            <Link
-              href="/login"
-              onClick={() => setMobileOpen(false)}
-              className={cn(
-                'flex items-center justify-center gap-2 mx-1 py-3 rounded-lg',
-                'bg-brand-accent text-brand-dark font-medium text-body',
-                'hover:bg-[#ffe14d] transition-colors duration-fast',
-              )}
-            >
-              Connexion <span aria-hidden="true">→</span>
-            </Link>
-          )}
+          ) : null}
         </div>
       </div>
     </header>

@@ -3,7 +3,7 @@
 import type { Metadata } from 'next';
 import { getProducts } from '@/services/merchService';
 import SectionTitle from '@/components/ui/SectionTitle';
-import { FadeIn, SlideIn } from '@/components/motion/ScrollReveal';
+import { FadeIn } from '@/components/motion/ScrollReveal';
 import MerchShop from '@/components/features/merch/MerchShop';
 
 export const metadata: Metadata = {
@@ -42,27 +42,12 @@ export default async function MerchPage() {
         />
 
         <div className="relative max-w-7xl mx-auto px-5 md:px-8">
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
-            <FadeIn>
-              <SectionTitle pixelLabel="BOUTIQUE" title="Merch BDE" />
-              <p className="mt-4 text-brand-light/70 max-w-xl leading-relaxed">
-                Le merch officiel du BDE MMI Bordeaux. Porte les couleurs de ta promo —
-                hoodies, tees, tote bags et éditions limitées.
-              </p>
-            </FadeIn>
-
-            <SlideIn from="right" delay={0.1}>
-              <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-950/40 border border-emerald-500/20 shrink-0">
-                <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-sm text-emerald-200/70">
-                  <span className="text-emerald-300 font-medium">
-                    {products.filter((p) => p.status === 'available').length}
-                  </span>{' '}
-                  articles disponibles
-                </span>
-              </div>
-            </SlideIn>
-          </div>
+          <FadeIn>
+            <SectionTitle pixelLabel="BOUTIQUE" title="Merch BDE" />
+            <p className="mt-4 text-brand-light/70 max-w-xl leading-relaxed">
+              Le merch officiel du BDE MMI Bordeaux. Porte les couleurs de ta promo.
+            </p>
+          </FadeIn>
         </div>
       </section>
 

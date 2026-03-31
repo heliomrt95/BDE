@@ -6,10 +6,10 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 
 // Routes that require authentication — add new protected paths here
-const PROTECTED_ROUTES = ['/dashboard', '/admin'];
+const PROTECTED_ROUTES = ['/dashboard'];
 
 // Routes only accessible when NOT logged in (redirect to / if already logged in)
-const AUTH_ROUTES = ['/login', '/signup'];
+const AUTH_ROUTES = ['/signup'];
 
 export async function middleware(request: NextRequest) {
   // Skip if Supabase is not configured (env vars empty)
@@ -48,7 +48,7 @@ export async function middleware(request: NextRequest) {
   // Protected routes: redirect to /login if not authenticated
   const isProtected = PROTECTED_ROUTES.some((route) => pathname.startsWith(route));
   if (isProtected && !user) {
-    const loginUrl = new URL('/login', request.url);
+    const loginUrl = new URL('/admin', request.url);
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);
   }

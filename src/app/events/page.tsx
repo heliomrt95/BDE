@@ -14,7 +14,8 @@ export const metadata: Metadata = {
 };
 
 export default async function EventsPage() {
-  const [events, user] = await Promise.all([getEvents(), getServerUser()]);
+  const [events, supabaseUser] = await Promise.all([getEvents(), getServerUser()]);
+  const isAdmin = supabaseUser?.user_metadata?.role === 'admin';
 
   return (
     <>
@@ -56,7 +57,7 @@ export default async function EventsPage() {
               </div>
             </FadeIn>
 
-            {user && (
+            {isAdmin && (
               <SlideIn from="right" delay={0.1}>
                 <Link
                   href="/events/new"
@@ -75,7 +76,7 @@ export default async function EventsPage() {
 
       {/* ── Events content ── */}
       <section className="max-w-7xl mx-auto px-5 md:px-8 pb-24">
-        <EventCalendar events={events} currentUserId={user?.id} />
+        <EventCalendar events={events} isAdmin={isAdmin} />
       </section>
     </>
   );

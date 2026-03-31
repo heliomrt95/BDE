@@ -9,10 +9,10 @@ import Button from '@/components/ui/Button';
 import { signIn } from '@/services/authService';
 import { cn } from '@/lib/utils/cn';
 
-export default function LoginForm() {
+export default function LoginForm({ redirectTo: redirectToProp }: { redirectTo?: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get('redirect') || '/';
+  const redirectTo = searchParams.get('redirect') ?? redirectToProp ?? '/';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);

@@ -17,10 +17,10 @@ type ViewMode = 'grid' | 'list';
 
 interface EventCalendarProps {
   events: Event[];
-  currentUserId?: string;
+  isAdmin?: boolean;
 }
 
-export default function EventCalendar({ events, currentUserId }: EventCalendarProps) {
+export default function EventCalendar({ events, isAdmin }: EventCalendarProps) {
   const [activeFilters, setActiveFilters] = useState<EventCategory[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -121,7 +121,7 @@ export default function EventCalendar({ events, currentUserId }: EventCalendarPr
               <EventCard
                 event={event}
                 variant={viewMode === 'grid' ? 'image' : 'compact'}
-                canDelete={!!currentUserId && event.created_by === currentUserId}
+                canDelete={!!isAdmin}
                 onDelete={() => handleDelete(event.id)}
                 deleting={deletingId === event.id}
               />

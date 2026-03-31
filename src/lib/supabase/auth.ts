@@ -36,8 +36,8 @@ export async function requireAuth(redirectBack?: string): Promise<User> {
 
   if (!supabaseUser) {
     const loginUrl = redirectBack
-      ? `/login?redirect=${encodeURIComponent(redirectBack)}`
-      : '/login';
+      ? `/admin?redirect=${encodeURIComponent(redirectBack)}`
+      : '/admin';
     redirect(loginUrl);
   }
 

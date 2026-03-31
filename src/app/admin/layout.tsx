@@ -1,14 +1,14 @@
-// src/app/admin/layout.tsx — Admin shell layout
-
 import Link from 'next/link';
-import { requireRole } from '@/lib/supabase/auth';
+import { getServerUser } from '@/lib/supabase/auth';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const user = await requireRole('admin', '/admin');
+  const user = await getServerUser();
+  const isAdmin = user?.user_metadata?.role === 'admin';
+
+  if (!isAdmin) return <>{children}</>;
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Top bar */}
       <header className="sticky top-0 z-50 border-b border-brand-mid/20 bg-brand-dark/95 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-5 md:px-8 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -27,8 +27,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </div>
         </div>
       </header>
-
-      {/* Content */}
       <main className="flex-1 max-w-7xl mx-auto w-full px-5 md:px-8 py-10">
         {children}
       </main>
