@@ -28,7 +28,7 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-  const { badgeClass, imageClass } = STATUS_CONFIG[product.status];
+  const { label: statusLabel, badgeClass, imageClass } = STATUS_CONFIG[product.status];
   const isUnavailable = product.status !== 'available';
 
   return (
@@ -65,7 +65,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             badgeClass,
           )}
         >
-          {status.label}
+          {statusLabel}
         </span>
 
         {/* Limited edition ribbon */}
