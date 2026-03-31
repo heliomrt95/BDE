@@ -22,15 +22,13 @@ export default function PostCard({ post, featured = false }: PostCardProps) {
     <Link href={`/blog/${post.slug}`} className="group block h-full focus-brand rounded-xl">
       <article
         className={cn(
-          'relative flex rounded-xl overflow-hidden h-full',
+          'relative flex flex-col h-full rounded-xl overflow-hidden',
           'border border-border/40 bg-surface-raised/20 backdrop-blur-sm',
           'hover:border-brand-mid/50 hover:-translate-y-1',
           'transition-all duration-normal ease-smooth',
-          // featured: side-by-side on md+, stacked below
-          featured ? 'flex-col md:flex-row md:min-h-[300px]' : 'flex-col',
         )}
       >
-        {/* Accent bar — always at the very top, absolute so it doesn't affect flex layout */}
+        {/* Accent bar — absolute so it never interferes with flex layout */}
         <div
           className="absolute top-0 inset-x-0 h-[2px] z-10 bg-gradient-to-r from-brand-mid via-brand-accent/50 to-transparent"
           aria-hidden="true"
@@ -40,7 +38,7 @@ export default function PostCard({ post, featured = false }: PostCardProps) {
         {post.cover_image_url ? (
           <div className={cn(
             'shrink-0 overflow-hidden bg-brand-mid/20',
-            featured ? 'w-full md:w-2/5 aspect-[16/9] md:aspect-auto' : 'aspect-[16/9]',
+            featured ? 'aspect-[21/9]' : 'aspect-[16/9]',
           )}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -53,7 +51,7 @@ export default function PostCard({ post, featured = false }: PostCardProps) {
           <div className={cn(
             'shrink-0 flex items-center justify-center',
             'bg-gradient-to-br from-brand-mid/20 via-brand-dark to-brand-dark',
-            featured ? 'w-full md:w-2/5 aspect-[16/9] md:aspect-auto' : 'aspect-[16/9]',
+            featured ? 'aspect-[21/9]' : 'aspect-[16/9]',
           )}>
             <span className="pixel-text text-pixel-xl text-brand-mid/25 select-none">{'{ }'}</span>
           </div>
@@ -62,7 +60,7 @@ export default function PostCard({ post, featured = false }: PostCardProps) {
         {/* ── Content ── */}
         <div className={cn(
           'flex flex-col flex-1 min-w-0',
-          featured ? 'p-7 md:p-10' : 'p-6',
+          featured ? 'p-7 md:p-9' : 'p-6',
         )}>
           {/* Tags */}
           {post.tags?.length > 0 && (
@@ -81,7 +79,7 @@ export default function PostCard({ post, featured = false }: PostCardProps) {
           {/* Title */}
           <h2 className={cn(
             'font-display text-white mb-3 group-hover:text-brand-accent transition-colors duration-fast',
-            featured ? 'text-display-sm' : 'text-heading',
+            featured ? 'text-display-sm md:text-display-md' : 'text-heading',
           )}>
             {post.title}
           </h2>
@@ -89,8 +87,8 @@ export default function PostCard({ post, featured = false }: PostCardProps) {
           {/* Excerpt */}
           {post.excerpt && (
             <p className={cn(
-              'text-text-secondary mb-5 flex-1',
-              featured ? 'text-body line-clamp-3' : 'text-small line-clamp-2',
+              'text-text-secondary mb-5',
+              featured ? 'text-body line-clamp-2 max-w-2xl' : 'text-small line-clamp-2',
             )}>
               {post.excerpt}
             </p>
