@@ -15,7 +15,7 @@ export async function GET() {
   });
 
   const { data, error } = await supabase.auth.signUp({
-    email: 'admin@bde-mmi.fr',
+    email: 'bdemmibordeaux@gmail.com',
     password: 'BdeMMI2026!',
     options: {
       data: { name: 'Admin BDE', role: 'admin' },
