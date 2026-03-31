@@ -13,3 +13,5 @@ export interface LunchMenu {
   mains: LunchDish[];
   desserts: LunchDish[];
 }
+
+export type WeekMenu = LunchMenu[];
