@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import Header from './Header';
 import Footer from './Footer';
 
-const AUTH_ROUTES = ['/login', '/signup', '/admin'];
+const AUTH_ROUTES = ['/admin'];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

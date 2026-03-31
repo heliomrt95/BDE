@@ -9,7 +9,7 @@ import { createServerClient } from '@supabase/ssr';
 const PROTECTED_ROUTES = ['/dashboard'];
 
 // Routes only accessible when NOT logged in (redirect to / if already logged in)
-const AUTH_ROUTES = ['/signup'];
+const AUTH_ROUTES: string[] = [];
 
 export async function middleware(request: NextRequest) {
   // Skip if Supabase is not configured (env vars empty)
