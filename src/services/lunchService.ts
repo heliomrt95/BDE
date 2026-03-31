@@ -1,122 +1,190 @@
 // src/services/lunchService.ts
-// Fetches the week's menus from the CROUS API.
-// Actual endpoint TBD — mock data ready for the full week.
+// Fetches the week's menus from the CROUStillant API.
+// Docs: https://api.croustillant.menu
+// Restaurant: Resto U' le Capu (ID 14) — 16 rue Jules Guesde, Bordeaux
 
-import { WeekMenu } from '@/types';
+import { WeekMenu, LunchMenu, LunchDish } from '@/types';
 
-const CROUS_API_BASE = process.env.CROUS_API_URL ?? '';
-const RESTAURANT_ID = process.env.CROUS_RESTAURANT_ID ?? '';
+const CROUSTILLANT_BASE = 'https://api.croustillant.menu';
+const RESTAURANT_CODE = 14; // Resto U' le Capu — Campus Victoire, Bordeaux
 
-// Returns ISO date string for a given day offset from this week's Monday
-function weekDate(dayOffset: number): string {
-  const today = new Date();
-  const monday = new Date(today);
-  const dow = today.getDay(); // 0=Sun, 1=Mon...
-  const diff = dow === 0 ? -6 : 1 - dow; // shift to Monday
-  monday.setDate(today.getDate() + diff + dayOffset);
-  monday.setHours(12, 0, 0, 0);
-  return monday.toISOString();
+// ── API response types ────────────────────────────────────────────────────────
+
+interface CrousPlat {
+  code: number;
+  ordre: number;
+  libelle: string;
 }
 
-const MOCK_WEEK: WeekMenu = [
-  {
-    date: weekDate(0), // Monday
-    restaurant: 'RU Bordeaux — Campus Victoire',
-    starters: [
-      { name: 'Taboulé maison', description: 'Semoule fine, menthe fraîche, tomate, citron', price: 0 },
-      { name: 'Velouté de potimarron', description: 'Crème fraîche, noix grillées', price: 0 },
-      { name: 'Carottes râpées vinaigrette', price: 0 },
-    ],
-    mains: [
-      { name: 'Poulet rôti jus de thym', description: 'Servi avec gratin dauphinois', price: 3.30 },
-      { name: 'Lasagnes végétariennes', description: 'Béchamel, courgettes, ricotta', price: 3.30 },
-    ],
-    desserts: [
-      { name: 'Tarte aux pommes', description: 'Pâte brisée maison, compote', price: 0 },
-      { name: 'Yaourt nature', price: 0 },
-      { name: 'Fruit de saison', price: 0 },
-    ],
-  },
-  {
-    date: weekDate(1), // Tuesday
-    restaurant: 'RU Bordeaux — Campus Victoire',
-    starters: [
-      { name: 'Salade niçoise', description: 'Thon, haricots verts, olives, œuf dur', price: 0 },
-      { name: 'Soupe de lentilles corail', description: 'Cumin, coriandre fraîche', price: 0 },
-      { name: 'Betterave vinaigrette', price: 0 },
-    ],
-    mains: [
-      { name: 'Bœuf bourguignon', description: 'Carottes, champignons, purée maison', price: 3.30 },
-      { name: 'Filet de cabillaud vapeur', description: 'Sauce vierge, riz parfumé', price: 3.30 },
-    ],
-    desserts: [
-      { name: 'Mousse au chocolat', description: 'Chocolat noir 70%', price: 0 },
-      { name: 'Compote poire-vanille', price: 0 },
-      { name: 'Fruit de saison', price: 0 },
-    ],
-  },
-  {
-    date: weekDate(2), // Wednesday
-    restaurant: 'RU Bordeaux — Campus Victoire',
-    starters: [
-      { name: 'Brandade de morue gratinée', description: 'Huile d\'olive, ail, persil', price: 0 },
-      { name: 'Gaspacho de tomates', description: 'Basilic, concombre, poivron', price: 0 },
-      { name: 'Crudités du marché', price: 0 },
-    ],
-    mains: [
-      { name: 'Tajine d\'agneau aux pruneaux', description: 'Amandes grillées, couscous', price: 3.30 },
-      { name: 'Omelette aux fines herbes', description: 'Salade verte, croûtons', price: 3.30 },
-    ],
-    desserts: [
-      { name: 'Crème brûlée', description: 'Vanille Bourbon', price: 0 },
-      { name: 'Salade de fruits frais', price: 0 },
-      { name: 'Fromage blanc miel', price: 0 },
-    ],
-  },
-  {
-    date: weekDate(3), // Thursday
-    restaurant: 'RU Bordeaux — Campus Victoire',
-    starters: [
-      { name: 'Houmous & pita maison', description: 'Pois chiches, tahini, paprika fumé', price: 0 },
-      { name: 'Velouté de champignons', description: 'Crème de truffe, croutons', price: 0 },
-      { name: 'Salade de concombres au yaourt', price: 0 },
-    ],
-    mains: [
-      { name: 'Saumon grillé beurre blanc', description: 'Haricots verts, pommes vapeur', price: 3.30 },
-      { name: 'Curry de pois chiches', description: 'Lait de coco, riz basmati', price: 3.30 },
-    ],
-    desserts: [
-      { name: 'Tarte citron meringuée', description: 'Meringue italienne', price: 0 },
-      { name: 'Yaourt aux fruits', price: 0 },
-      { name: 'Fruit de saison', price: 0 },
-    ],
-  },
-  {
-    date: weekDate(4), // Friday
-    restaurant: 'RU Bordeaux — Campus Victoire',
-    starters: [
-      { name: 'Salade César maison', description: 'Romaine, parmesan, anchois, croûtons', price: 0 },
-      { name: 'Minestrone de légumes', description: 'Basilic, parmesan râpé', price: 0 },
-      { name: 'Avocat vinaigrette', price: 0 },
-    ],
-    mains: [
-      { name: 'Confit de canard sarladais', description: 'Pommes sarladaises, salade frisée', price: 3.30 },
-      { name: 'Quiche lorraine & salade', description: 'Lardons fumés, gruyère', price: 3.30 },
-    ],
-    desserts: [
-      { name: 'Île flottante', description: 'Crème anglaise vanille, caramel', price: 0 },
-      { name: 'Brownie chocolat noix', price: 0 },
-      { name: 'Fruit de saison', price: 0 },
-    ],
-  },
-];
+interface CrousCategorie {
+  code: number;
+  libelle: string;
+  ordre: number;
+  plats: CrousPlat[];
+}
+
+interface CrousRepas {
+  code: number;
+  type: 'midi' | 'soir' | 'matin';
+  categories: CrousCategorie[];
+}
+
+interface CrousMenu {
+  code: number;
+  date: string; // "DD-MM-YYYY"
+  repas: CrousRepas[];
+}
+
+interface CrousApiResponse {
+  success: boolean;
+  data: CrousMenu[];
+}
+
+// ── Mapper ────────────────────────────────────────────────────────────────────
+
+// The CROUStillant API returns a flat "Menu" category with all dishes.
+// Dishes before "OU" = main option 1, after "OU" = vegetarian option.
+// Accompaniments (sauces, sides) are listed as separate plats.
+function mapCrousMenuToLunchMenu(crousMenu: CrousMenu): LunchMenu {
+  const [day, month, year] = crousMenu.date.split('-');
+  const isoDate = new Date(`${year}-${month}-${day}T12:00:00`).toISOString();
+
+  // Get the midi repas (lunch), fallback to first available
+  const repas =
+    crousMenu.repas.find((r) => r.type === 'midi') ?? crousMenu.repas[0];
+
+  if (!repas) {
+    return {
+      date: isoDate,
+      restaurant: "Resto U' le Capu",
+      starters: [],
+      mains: [],
+      desserts: [],
+    };
+  }
+
+  // Collect all plats from all categories, filter separators
+  const allPlats: LunchDish[] = repas.categories
+    .flatMap((cat) => cat.plats)
+    .filter((p) => p.libelle !== 'OU' && p.libelle.trim() !== '')
+    .map((p) => ({
+      name: capitalizeFirst(p.libelle),
+      price: 3.30,
+    }));
+
+  return {
+    date: isoDate,
+    restaurant: "Resto U' le Capu",
+    starters: [],
+    mains: allPlats,
+    desserts: [],
+  };
+}
+
+function capitalizeFirst(str: string): string {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+// ── Service ───────────────────────────────────────────────────────────────────
 
 export async function getLunchMenu(): Promise<WeekMenu> {
-  // TODO: replace with real CROUS API call
-  // const res = await fetch(`${CROUS_API_BASE}/restaurants/${RESTAURANT_ID}/menus/week`);
-  // const data = await res.json();
-  // return mapCrousResponseToWeekMenu(data);
-  void CROUS_API_BASE;
-  void RESTAURANT_ID;
-  return MOCK_WEEK;
+  try {
+    const res = await fetch(
+      `${CROUSTILLANT_BASE}/v1/restaurants/${RESTAURANT_CODE}/menu`,
+      { next: { revalidate: 3600 } },
+    );
+
+    if (!res.ok) {
+      throw new Error(`CROUStillant API error: ${res.status}`);
+    }
+
+    const json: CrousApiResponse = await res.json();
+
+    if (!json.success || !Array.isArray(json.data)) {
+      throw new Error('Unexpected CROUStillant API response shape');
+    }
+
+    // Only keep weekdays (lundi–vendredi) with at least one repas
+    const weekMenus: WeekMenu = json.data
+      .filter((m) => {
+        const [d, mo, y] = m.date.split('-');
+        const dow = new Date(`${y}-${mo}-${d}`).getDay();
+        return dow >= 1 && dow <= 5 && m.repas.length > 0;
+      })
+      .map(mapCrousMenuToLunchMenu);
+
+    if (weekMenus.length === 0) {
+      throw new Error('No weekday menus returned');
+    }
+
+    return weekMenus;
+  } catch (err) {
+    console.error('[lunchService] Failed to fetch from CROUStillant, using fallback:', err);
+    return FALLBACK_WEEK;
+  }
 }
+
+// ── Fallback mock (used if API is down) ───────────────────────────────────────
+
+function weekDate(dayOffset: number): string {
+  const today = new Date();
+  const dow = today.getDay();
+  const diff = dow === 0 ? -6 : 1 - dow;
+  const d = new Date(today);
+  d.setDate(today.getDate() + diff + dayOffset);
+  d.setHours(12, 0, 0, 0);
+  return d.toISOString();
+}
+
+const FALLBACK_WEEK: WeekMenu = [
+  {
+    date: weekDate(0),
+    restaurant: "Resto U' le Capu",
+    starters: [],
+    mains: [
+      { name: 'Poulet rôti jus de thym', description: 'Gratin dauphinois', price: 3.30 },
+      { name: 'Sans viande : lasagnes épinard chèvre', price: 3.30 },
+    ],
+    desserts: [],
+  },
+  {
+    date: weekDate(1),
+    restaurant: "Resto U' le Capu",
+    starters: [],
+    mains: [
+      { name: 'Bœuf bourguignon', description: 'Carottes, champignons, purée', price: 3.30 },
+      { name: 'Sans viande : chili sin carne', price: 3.30 },
+    ],
+    desserts: [],
+  },
+  {
+    date: weekDate(2),
+    restaurant: "Resto U' le Capu",
+    starters: [],
+    mains: [
+      { name: 'Tajine d\'agneau aux pruneaux', description: 'Couscous', price: 3.30 },
+      { name: 'Sans viande : curry de pois chiches', price: 3.30 },
+    ],
+    desserts: [],
+  },
+  {
+    date: weekDate(3),
+    restaurant: "Resto U' le Capu",
+    starters: [],
+    mains: [
+      { name: 'Saumon grillé', description: 'Beurre blanc, haricots verts', price: 3.30 },
+      { name: 'Sans viande : tarte aux légumes', price: 3.30 },
+    ],
+    desserts: [],
+  },
+  {
+    date: weekDate(4),
+    restaurant: "Resto U' le Capu",
+    starters: [],
+    mains: [
+      { name: 'Confit de canard', description: 'Pommes sarladaises', price: 3.30 },
+      { name: 'Sans viande : quiche aux légumes', price: 3.30 },
+    ],
+    desserts: [],
+  },
+];
