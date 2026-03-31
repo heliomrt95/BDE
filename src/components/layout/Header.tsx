@@ -13,7 +13,7 @@ export default function Header() {
   return (
     <header className="fixed top-0 inset-x-0 z-50">
       <div className="border-b transition-all duration-normal border-border/20 bg-brand-dark/70 backdrop-blur-xl">
-        <nav className="max-w-7xl mx-auto px-5 md:px-8 h-[60px] flex items-center justify-between gap-8">
+        <nav className="max-w-7xl mx-auto px-5 md:px-8 h-[60px] grid grid-cols-3 items-center">
 
           {/* ── Logo ── */}
           <Link href="/" className="flex items-center gap-2.5 group focus-brand rounded-sm shrink-0">
@@ -30,7 +30,7 @@ export default function Header() {
           </Link>
 
           {/* ── Desktop nav ── */}
-          <ul className="hidden md:flex items-center gap-0.5 flex-1 justify-center">
+          <ul className="hidden md:flex items-center gap-0.5 justify-center">
             {NAV_ITEMS.map((item) => {
               const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
               return (
@@ -62,7 +62,7 @@ export default function Header() {
             aria-label={mobileOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
             aria-expanded={mobileOpen}
             className={cn(
-              'md:hidden relative w-9 h-9 flex flex-col items-center justify-center gap-[5px]',
+              'md:hidden relative w-9 h-9 flex flex-col items-center justify-center gap-[5px] ml-auto',
               'rounded-md border border-border/30 focus-brand transition-colors duration-fast',
               mobileOpen ? 'bg-white/10 border-white/20' : 'hover:bg-white/5',
             )}
