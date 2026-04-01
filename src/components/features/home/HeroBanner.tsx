@@ -6,7 +6,6 @@
 
 'use client';
 
-import Link from 'next/link';
 import { cn } from '@/lib/utils/cn';
 import { FadeIn, SlideIn } from '@/components/motion/ScrollReveal';
 
@@ -100,23 +99,6 @@ export default function HeroBanner() {
           </div>
         </FadeIn>
 
-        {/* CTA — single, centered, bold */}
-        <FadeIn delay={0.35}>
-          <Link
-            href="/events"
-            className={cn(
-              'inline-flex items-center gap-3 px-10 py-5 rounded-lg font-medium text-subheading',
-              'bg-brand-accent text-brand-dark',
-              'hover:bg-[#ffe14d] hover:shadow-glow-accent hover:scale-[1.02]',
-              'active:bg-[#e6c009] active:scale-[0.98]',
-              'transition-all duration-normal ease-smooth',
-              'focus-brand',
-            )}
-          >
-            Voir les événements
-            <span aria-hidden="true" className="text-xl">→</span>
-          </Link>
-        </FadeIn>
       </div>
     </section>
   );
