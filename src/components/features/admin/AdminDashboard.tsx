@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils/cn';
 import EventsPanel from './EventsPanel';
 import PostsPanel from './PostsPanel';
@@ -22,15 +24,36 @@ interface AdminDashboardProps {
 
 export default function AdminDashboard({ userName }: AdminDashboardProps) {
   const [tab, setTab] = useState<Tab>('events');
+  const router = useRouter();
+
+  async function handleSignOut() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push('/admin');
+  }
 
   return (
     <div className="flex flex-col gap-6">
       {/* Welcome */}
-      <div>
-        <p className="font-pixel text-[10px] uppercase tracking-widest text-brand-accent mb-1">Admin</p>
-        <h1 className="font-display text-white text-2xl md:text-3xl">
-          Bonjour, {userName.split(' ')[0]}.
-        </h1>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="font-pixel text-[10px] uppercase tracking-widest text-brand-accent mb-1">Admin</p>
+          <h1 className="font-display text-white text-2xl md:text-3xl">
+            Bonjour, {userName.split(' ')[0]}.
+          </h1>
+        </div>
+        <button
+          onClick={handleSignOut}
+          className={cn(
+            'shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm',
+            'border border-border/40 text-text-muted',
+            'hover:border-red-500/40 hover:text-red-400 hover:bg-red-500/5',
+            'transition-all duration-fast focus-brand',
+          )}
+        >
+          <span aria-hidden="true">→</span>
+          Se déconnecter
+        </button>
       </div>
 
       {/* Tab bar */}
