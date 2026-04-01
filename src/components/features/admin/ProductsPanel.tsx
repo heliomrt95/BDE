@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useTransition } from 'react';
-import { adminGetProducts, adminCreateProduct, adminDeleteProduct, type ProductInsert } from '@/services/adminService';
+import { adminGetProducts, adminCreateProduct, adminUpdateProduct, adminDeleteProduct, type ProductInsert } from '@/services/adminService';
 import type { Product } from '@/types';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -30,6 +30,7 @@ export default function ProductsPanel() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<ProductInsert>(EMPTY_FORM);
   const [sizesRaw, setSizesRaw] = useState('');
   const [colorsRaw, setColorsRaw] = useState('');
@@ -57,7 +58,43 @@ export default function ProductsPanel() {
     setForm((f) => ({ ...f, [e.target.name]: value }));
   }
 
-  async function handleCreate(e: React.FormEvent) {
+  function openCreate() {
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setSizesRaw('');
+    setColorsRaw('');
+    setFormError(null);
+    setShowForm(true);
+  }
+
+  function openEdit(product: Product) {
+    setEditingId(product.id);
+    setForm({
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      image_url: product.image_url,
+      status: product.status,
+      sizes: product.sizes ?? [],
+      colors: product.colors ?? [],
+    });
+    setSizesRaw((product.sizes ?? []).join(', '));
+    setColorsRaw((product.colors ?? []).join(', '));
+    setFormError(null);
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function closeForm() {
+    setShowForm(false);
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setSizesRaw('');
+    setColorsRaw('');
+    setFormError(null);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.name.trim()) {
       setFormError('Le nom est requis.');
@@ -68,14 +105,16 @@ export default function ProductsPanel() {
     const colors = colorsRaw.split(',').map((c) => c.trim()).filter(Boolean);
     startTransition(async () => {
       try {
-        const created = await adminCreateProduct({ ...form, sizes, colors });
-        setProducts((prev) => [...prev, created]);
-        setForm(EMPTY_FORM);
-        setSizesRaw('');
-        setColorsRaw('');
-        setShowForm(false);
+        if (editingId) {
+          const updated = await adminUpdateProduct(editingId, { ...form, sizes, colors });
+          setProducts((prev) => prev.map((p) => p.id === editingId ? updated : p));
+        } else {
+          const created = await adminCreateProduct({ ...form, sizes, colors });
+          setProducts((prev) => [...prev, created]);
+        }
+        closeForm();
       } catch (e) {
-        setFormError(e instanceof Error ? e.message : 'Erreur lors de la création');
+        setFormError(e instanceof Error ? e.message : 'Erreur');
       }
     });
   }
@@ -97,7 +136,7 @@ export default function ProductsPanel() {
     { key: 'price', label: 'Prix', width: 'w-20' },
     { key: 'status', label: 'Statut', width: 'w-28' },
     { key: 'sizes', label: 'Tailles', width: 'w-32' },
-    { key: 'actions', label: '', width: 'w-28' },
+    { key: 'actions', label: '', width: 'w-40' },
   ];
 
   return (
@@ -109,30 +148,26 @@ export default function ProductsPanel() {
           <p className="text-brand-light/50 text-xs mt-0.5">{products.length} au total</p>
         </div>
         <Button
-          variant={showForm ? 'secondary' : 'primary'}
+          variant={showForm && !editingId ? 'secondary' : 'primary'}
           size="sm"
-          onClick={() => { setShowForm((v) => !v); setFormError(null); }}
+          onClick={showForm && !editingId ? closeForm : openCreate}
         >
-          {showForm ? 'Annuler' : '+ Nouveau produit'}
+          {showForm && !editingId ? 'Annuler' : '+ Nouveau produit'}
         </Button>
       </div>
 
-      {/* Inline create form */}
+      {/* Form (create or edit) */}
       {showForm && (
         <form
-          onSubmit={handleCreate}
+          onSubmit={handleSubmit}
           className="rounded-xl border border-brand-mid/30 bg-brand-mid/10 p-5 flex flex-col gap-4"
         >
-          <p className="font-pixel text-[10px] uppercase tracking-widest text-brand-accent">Nouveau produit</p>
+          <p className="font-pixel text-[10px] uppercase tracking-widest text-brand-accent">
+            {editingId ? 'Modifier le produit' : 'Nouveau produit'}
+          </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input id="name" name="name" label="Nom *" value={form.name} onChange={handleChange} required />
             <Input id="price" name="price" label="Prix (€)" type="number" min="0" step="0.01" value={form.price} onChange={handleChange} />
-            <ImageUpload
-              folder="products"
-              label="Image du produit"
-              value={form.image_url}
-              onChange={(url) => setForm((f) => ({ ...f, image_url: url }))}
-            />
             <div className="flex flex-col gap-1.5">
               <label htmlFor="status" className="text-small font-medium text-text-secondary">Statut</label>
               <select
@@ -161,24 +196,26 @@ export default function ProductsPanel() {
               className="w-full bg-surface-raised/60 text-white border border-border rounded-md px-4 py-2.5 text-body transition-all duration-fast ease-smooth focus:outline-none focus:border-brand-mid focus:bg-surface-raised focus:shadow-glow-purple resize-none placeholder:text-text-muted"
             />
           </div>
+          <ImageUpload
+            folder="products"
+            label="Image du produit"
+            value={form.image_url}
+            onChange={(url) => setForm((f) => ({ ...f, image_url: url }))}
+          />
           {formError && <p className="text-red-400 text-xs">{formError}</p>}
           <div className="flex gap-3">
             <Button type="submit" variant="accent" size="sm" disabled={isPending}>
-              {isPending ? 'Création…' : 'Créer le produit'}
+              {isPending ? 'Enregistrement…' : editingId ? 'Enregistrer' : 'Créer le produit'}
             </Button>
-            <Button type="button" variant="ghost" size="sm" onClick={() => setShowForm(false)}>Annuler</Button>
+            <Button type="button" variant="ghost" size="sm" onClick={closeForm}>Annuler</Button>
           </div>
         </form>
       )}
 
-      {/* Error */}
       {error && (
-        <div className="rounded-lg bg-red-500/10 border border-red-400/20 px-4 py-3 text-red-300 text-sm">
-          {error}
-        </div>
+        <div className="rounded-lg bg-red-500/10 border border-red-400/20 px-4 py-3 text-red-300 text-sm">{error}</div>
       )}
 
-      {/* Table */}
       {loading ? (
         <div className="rounded-xl border border-brand-mid/20 overflow-hidden">
           {[...Array(4)].map((_, i) => (
@@ -210,27 +247,14 @@ export default function ProductsPanel() {
                 <Td>
                   {deleteConfirm === product.id ? (
                     <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleDelete(product.id)}
-                        disabled={isPending}
-                        className="text-xs text-red-400 hover:text-red-300 font-medium"
-                      >
-                        Confirmer
-                      </button>
-                      <button
-                        onClick={() => setDeleteConfirm(null)}
-                        className="text-xs text-brand-light/40 hover:text-brand-light/70"
-                      >
-                        Annuler
-                      </button>
+                      <button onClick={() => handleDelete(product.id)} disabled={isPending} className="text-xs text-red-400 hover:text-red-300 font-medium disabled:opacity-40">Confirmer</button>
+                      <button onClick={() => setDeleteConfirm(null)} disabled={isPending} className="text-xs text-brand-light/40 hover:text-brand-light/70 disabled:opacity-40">Annuler</button>
                     </div>
                   ) : (
-                    <button
-                      onClick={() => setDeleteConfirm(product.id)}
-                      className="text-xs text-brand-light/40 hover:text-red-400 transition-colors duration-150"
-                    >
-                      Supprimer
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <button onClick={() => openEdit(product)} disabled={isPending} className="text-xs text-brand-light/50 hover:text-white transition-colors duration-150 disabled:opacity-40">Modifier</button>
+                      <button onClick={() => setDeleteConfirm(product.id)} disabled={isPending} className="text-xs text-brand-light/40 hover:text-red-400 transition-colors duration-150 disabled:opacity-40">Supprimer</button>
+                    </div>
                   )}
                 </Td>
               </>

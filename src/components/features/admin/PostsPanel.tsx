@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useTransition } from 'react';
-import { adminGetPosts, adminCreatePost, adminDeletePost, type PostInsert } from '@/services/adminService';
+import { adminGetPosts, adminCreatePost, adminUpdatePost, adminDeletePost, type PostInsert } from '@/services/adminService';
 import type { Post } from '@/types';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -24,6 +24,7 @@ export default function PostsPanel() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<PostInsert>(EMPTY_FORM);
   const [tagsRaw, setTagsRaw] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
@@ -49,7 +50,41 @@ export default function PostsPanel() {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
   }
 
-  async function handleCreate(e: React.FormEvent) {
+  function openCreate() {
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setTagsRaw('');
+    setFormError(null);
+    setShowForm(true);
+  }
+
+  function openEdit(post: Post) {
+    setEditingId(post.id);
+    setForm({
+      slug: post.slug,
+      title: post.title,
+      excerpt: post.excerpt ?? '',
+      content: post.content,
+      author: post.author,
+      tags: post.tags,
+      cover_image_url: post.cover_image_url ?? '',
+      published_at: post.published_at.slice(0, 16),
+    });
+    setTagsRaw(post.tags.join(', '));
+    setFormError(null);
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function closeForm() {
+    setShowForm(false);
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setTagsRaw('');
+    setFormError(null);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.title.trim() || !form.slug.trim() || !form.content.trim()) {
       setFormError('Titre, slug et contenu requis.');
@@ -59,13 +94,16 @@ export default function PostsPanel() {
     const tags = tagsRaw.split(',').map((t) => t.trim()).filter(Boolean);
     startTransition(async () => {
       try {
-        const created = await adminCreatePost({ ...form, tags, published_at: new Date(form.published_at).toISOString() });
-        setPosts((prev) => [created, ...prev]);
-        setForm(EMPTY_FORM);
-        setTagsRaw('');
-        setShowForm(false);
+        if (editingId) {
+          const updated = await adminUpdatePost(editingId, { ...form, tags, published_at: new Date(form.published_at).toISOString() });
+          setPosts((prev) => prev.map((p) => p.id === editingId ? updated : p));
+        } else {
+          const created = await adminCreatePost({ ...form, tags, published_at: new Date(form.published_at).toISOString() });
+          setPosts((prev) => [created, ...prev]);
+        }
+        closeForm();
       } catch (e) {
-        setFormError(e instanceof Error ? e.message : 'Erreur lors de la création');
+        setFormError(e instanceof Error ? e.message : 'Erreur');
       }
     });
   }
@@ -87,7 +125,7 @@ export default function PostsPanel() {
     { key: 'author', label: 'Auteur', width: 'w-32' },
     { key: 'tags', label: 'Tags', width: 'w-40' },
     { key: 'published_at', label: 'Publié le', width: 'w-32' },
-    { key: 'actions', label: '', width: 'w-28' },
+    { key: 'actions', label: '', width: 'w-40' },
   ];
 
   return (
@@ -99,21 +137,23 @@ export default function PostsPanel() {
           <p className="text-brand-light/50 text-xs mt-0.5">{posts.length} au total</p>
         </div>
         <Button
-          variant={showForm ? 'secondary' : 'primary'}
+          variant={showForm && !editingId ? 'secondary' : 'primary'}
           size="sm"
-          onClick={() => { setShowForm((v) => !v); setFormError(null); }}
+          onClick={showForm && !editingId ? closeForm : openCreate}
         >
-          {showForm ? 'Annuler' : '+ Nouvel article'}
+          {showForm && !editingId ? 'Annuler' : '+ Nouvel article'}
         </Button>
       </div>
 
-      {/* Inline create form */}
+      {/* Form (create or edit) */}
       {showForm && (
         <form
-          onSubmit={handleCreate}
+          onSubmit={handleSubmit}
           className="rounded-xl border border-brand-mid/30 bg-brand-mid/10 p-5 flex flex-col gap-4"
         >
-          <p className="font-pixel text-[10px] uppercase tracking-widest text-brand-accent">Nouvel article</p>
+          <p className="font-pixel text-[10px] uppercase tracking-widest text-brand-accent">
+            {editingId ? 'Modifier l\'article' : 'Nouvel article'}
+          </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input id="title" name="title" label="Titre *" value={form.title} onChange={handleChange} required />
             <Input id="slug" name="slug" label="Slug *" placeholder="mon-article" value={form.slug} onChange={handleChange} required />
@@ -154,21 +194,17 @@ export default function PostsPanel() {
           {formError && <p className="text-red-400 text-xs">{formError}</p>}
           <div className="flex gap-3">
             <Button type="submit" variant="accent" size="sm" disabled={isPending}>
-              {isPending ? 'Création…' : 'Publier l\'article'}
+              {isPending ? 'Enregistrement…' : editingId ? 'Enregistrer' : 'Publier l\'article'}
             </Button>
-            <Button type="button" variant="ghost" size="sm" onClick={() => setShowForm(false)}>Annuler</Button>
+            <Button type="button" variant="ghost" size="sm" onClick={closeForm}>Annuler</Button>
           </div>
         </form>
       )}
 
-      {/* Error */}
       {error && (
-        <div className="rounded-lg bg-red-500/10 border border-red-400/20 px-4 py-3 text-red-300 text-sm">
-          {error}
-        </div>
+        <div className="rounded-lg bg-red-500/10 border border-red-400/20 px-4 py-3 text-red-300 text-sm">{error}</div>
       )}
 
-      {/* Table */}
       {loading ? (
         <div className="rounded-xl border border-brand-mid/20 overflow-hidden">
           {[...Array(4)].map((_, i) => (
@@ -192,9 +228,7 @@ export default function PostsPanel() {
               <Td>
                 <div className="flex flex-wrap gap-1">
                   {post.tags.slice(0, 3).map((tag) => (
-                    <span key={tag} className="px-1.5 py-0.5 rounded bg-brand-mid/25 text-brand-light/70 text-[10px]">
-                      {tag}
-                    </span>
+                    <span key={tag} className="px-1.5 py-0.5 rounded bg-brand-mid/25 text-brand-light/70 text-[10px]">{tag}</span>
                   ))}
                 </div>
               </Td>
@@ -204,29 +238,14 @@ export default function PostsPanel() {
               <Td>
                 {deleteConfirm === post.id ? (
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleDelete(post.id)}
-                      disabled={isPending}
-                      className="text-xs text-red-400 hover:text-red-300 font-medium disabled:opacity-40"
-                    >
-                      Confirmer
-                    </button>
-                    <button
-                      onClick={() => setDeleteConfirm(null)}
-                      disabled={isPending}
-                      className="text-xs text-brand-light/40 hover:text-brand-light/70 disabled:opacity-40"
-                    >
-                      Annuler
-                    </button>
+                    <button onClick={() => handleDelete(post.id)} disabled={isPending} className="text-xs text-red-400 hover:text-red-300 font-medium disabled:opacity-40">Confirmer</button>
+                    <button onClick={() => setDeleteConfirm(null)} disabled={isPending} className="text-xs text-brand-light/40 hover:text-brand-light/70 disabled:opacity-40">Annuler</button>
                   </div>
                 ) : (
-                  <button
-                    onClick={() => setDeleteConfirm(post.id)}
-                    disabled={isPending}
-                    className="text-xs text-brand-light/40 hover:text-red-400 transition-colors duration-150 disabled:opacity-40"
-                  >
-                    Supprimer
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <button onClick={() => openEdit(post)} disabled={isPending} className="text-xs text-brand-light/50 hover:text-white transition-colors duration-150 disabled:opacity-40">Modifier</button>
+                    <button onClick={() => setDeleteConfirm(post.id)} disabled={isPending} className="text-xs text-brand-light/40 hover:text-red-400 transition-colors duration-150 disabled:opacity-40">Supprimer</button>
+                  </div>
                 )}
               </Td>
             </>

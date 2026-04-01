@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useTransition } from 'react';
-import { adminGetProjects, adminCreateProject, adminDeleteProject, type ProjectInsert } from '@/services/adminService';
+import { adminGetProjects, adminCreateProject, adminUpdateProject, adminDeleteProject, type ProjectInsert } from '@/services/adminService';
 import type { Project } from '@/types';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -34,6 +34,7 @@ export default function ProjectsPanel() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<ProjectInsert>(EMPTY_FORM);
   const [tagsRaw, setTagsRaw] = useState('');
   const [authorsRaw, setAuthorsRaw] = useState('');
@@ -60,7 +61,46 @@ export default function ProjectsPanel() {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
   }
 
-  async function handleCreate(e: React.FormEvent) {
+  function openCreate() {
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setTagsRaw('');
+    setAuthorsRaw('');
+    setFormError(null);
+    setShowForm(true);
+  }
+
+  function openEdit(project: Project) {
+    setEditingId(project.id);
+    setForm({
+      title: project.title,
+      description: project.description,
+      author: project.author,
+      authors: project.authors ?? [],
+      year: project.year,
+      type: project.type,
+      tags: project.tags,
+      thumbnail: project.thumbnail,
+      image_url: project.image_url ?? '',
+      project_url: project.project_url ?? '',
+    });
+    setTagsRaw(project.tags.join(', '));
+    setAuthorsRaw((project.authors ?? []).join(', '));
+    setFormError(null);
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function closeForm() {
+    setShowForm(false);
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setTagsRaw('');
+    setAuthorsRaw('');
+    setFormError(null);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.title.trim() || !form.author.trim()) {
       setFormError('Titre et auteur requis.');
@@ -71,14 +111,16 @@ export default function ProjectsPanel() {
     const authors = authorsRaw.split(',').map((a) => a.trim()).filter(Boolean);
     startTransition(async () => {
       try {
-        const created = await adminCreateProject({ ...form, tags, authors });
-        setProjects((prev) => [created, ...prev]);
-        setForm(EMPTY_FORM);
-        setTagsRaw('');
-        setAuthorsRaw('');
-        setShowForm(false);
+        if (editingId) {
+          const updated = await adminUpdateProject(editingId, { ...form, tags, authors });
+          setProjects((prev) => prev.map((p) => p.id === editingId ? updated : p));
+        } else {
+          const created = await adminCreateProject({ ...form, tags, authors });
+          setProjects((prev) => [created, ...prev]);
+        }
+        closeForm();
       } catch (e) {
-        setFormError(e instanceof Error ? e.message : 'Erreur lors de la création');
+        setFormError(e instanceof Error ? e.message : 'Erreur');
       }
     });
   }
@@ -100,7 +142,7 @@ export default function ProjectsPanel() {
     { key: 'author', label: 'Auteur', width: 'w-32' },
     { key: 'type', label: 'Type', width: 'w-24' },
     { key: 'year', label: 'Année', width: 'w-24' },
-    { key: 'actions', label: '', width: 'w-28' },
+    { key: 'actions', label: '', width: 'w-40' },
   ];
 
   return (
@@ -112,21 +154,23 @@ export default function ProjectsPanel() {
           <p className="text-brand-light/50 text-xs mt-0.5">{projects.length} projets</p>
         </div>
         <Button
-          variant={showForm ? 'secondary' : 'primary'}
+          variant={showForm && !editingId ? 'secondary' : 'primary'}
           size="sm"
-          onClick={() => { setShowForm((v) => !v); setFormError(null); }}
+          onClick={showForm && !editingId ? closeForm : openCreate}
         >
-          {showForm ? 'Annuler' : '+ Nouveau projet'}
+          {showForm && !editingId ? 'Annuler' : '+ Nouveau projet'}
         </Button>
       </div>
 
-      {/* Inline create form */}
+      {/* Form (create or edit) */}
       {showForm && (
         <form
-          onSubmit={handleCreate}
+          onSubmit={handleSubmit}
           className="rounded-xl border border-brand-mid/30 bg-brand-mid/10 p-5 flex flex-col gap-4"
         >
-          <p className="font-pixel text-[10px] uppercase tracking-widest text-brand-accent">Nouveau projet</p>
+          <p className="font-pixel text-[10px] uppercase tracking-widest text-brand-accent">
+            {editingId ? 'Modifier le projet' : 'Nouveau projet'}
+          </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input id="title" name="title" label="Titre *" value={form.title} onChange={handleChange} required />
             <Input id="author" name="author" label="Auteur principal *" value={form.author} onChange={handleChange} required />
@@ -171,21 +215,17 @@ export default function ProjectsPanel() {
           {formError && <p className="text-red-400 text-xs">{formError}</p>}
           <div className="flex gap-3">
             <Button type="submit" variant="accent" size="sm" disabled={isPending}>
-              {isPending ? 'Création…' : 'Ajouter au portfolio'}
+              {isPending ? 'Enregistrement…' : editingId ? 'Enregistrer' : 'Ajouter au portfolio'}
             </Button>
-            <Button type="button" variant="ghost" size="sm" onClick={() => setShowForm(false)}>Annuler</Button>
+            <Button type="button" variant="ghost" size="sm" onClick={closeForm}>Annuler</Button>
           </div>
         </form>
       )}
 
-      {/* Error */}
       {error && (
-        <div className="rounded-lg bg-red-500/10 border border-red-400/20 px-4 py-3 text-red-300 text-sm">
-          {error}
-        </div>
+        <div className="rounded-lg bg-red-500/10 border border-red-400/20 px-4 py-3 text-red-300 text-sm">{error}</div>
       )}
 
-      {/* Table */}
       {loading ? (
         <div className="rounded-xl border border-brand-mid/20 overflow-hidden">
           {[...Array(4)].map((_, i) => (
@@ -218,29 +258,14 @@ export default function ProjectsPanel() {
               <Td>
                 {deleteConfirm === project.id ? (
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleDelete(project.id)}
-                      disabled={isPending}
-                      className="text-xs text-red-400 hover:text-red-300 font-medium disabled:opacity-40"
-                    >
-                      Confirmer
-                    </button>
-                    <button
-                      onClick={() => setDeleteConfirm(null)}
-                      disabled={isPending}
-                      className="text-xs text-brand-light/40 hover:text-brand-light/70 disabled:opacity-40"
-                    >
-                      Annuler
-                    </button>
+                    <button onClick={() => handleDelete(project.id)} disabled={isPending} className="text-xs text-red-400 hover:text-red-300 font-medium disabled:opacity-40">Confirmer</button>
+                    <button onClick={() => setDeleteConfirm(null)} disabled={isPending} className="text-xs text-brand-light/40 hover:text-brand-light/70 disabled:opacity-40">Annuler</button>
                   </div>
                 ) : (
-                  <button
-                    onClick={() => setDeleteConfirm(project.id)}
-                    disabled={isPending}
-                    className="text-xs text-brand-light/40 hover:text-red-400 transition-colors duration-150 disabled:opacity-40"
-                  >
-                    Supprimer
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <button onClick={() => openEdit(project)} disabled={isPending} className="text-xs text-brand-light/50 hover:text-white transition-colors duration-150 disabled:opacity-40">Modifier</button>
+                    <button onClick={() => setDeleteConfirm(project.id)} disabled={isPending} className="text-xs text-brand-light/40 hover:text-red-400 transition-colors duration-150 disabled:opacity-40">Supprimer</button>
+                  </div>
                 )}
               </Td>
             </>

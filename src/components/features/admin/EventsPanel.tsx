@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useTransition } from 'react';
-import { adminGetEvents, adminCreateEvent, adminDeleteEvent } from '@/services/adminService';
+import { adminGetEvents, adminCreateEvent, adminUpdateEvent, adminDeleteEvent } from '@/services/adminService';
 import type { Event, EventInsert } from '@/types';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -32,6 +32,7 @@ export default function EventsPanel() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<EventInsert>(EMPTY_FORM);
   const [formError, setFormError] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
@@ -56,7 +57,39 @@ export default function EventsPanel() {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
   }
 
-  async function handleCreate(e: React.FormEvent) {
+  function openCreate() {
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setFormError(null);
+    setShowForm(true);
+  }
+
+  function openEdit(ev: Event) {
+    setEditingId(ev.id);
+    setForm({
+      title: ev.title,
+      description: ev.description ?? '',
+      date: ev.date ?? '',
+      start_date: ev.start_date ?? '',
+      end_date: ev.end_date ?? '',
+      location: ev.location ?? '',
+      category: ev.category,
+      image_url: ev.image_url ?? '',
+      registration_url: ev.registration_url ?? '',
+    });
+    setFormError(null);
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function closeForm() {
+    setShowForm(false);
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setFormError(null);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.title.trim() || !form.start_date) {
       setFormError('Titre et date de début requis.');
@@ -65,12 +98,16 @@ export default function EventsPanel() {
     setFormError(null);
     startTransition(async () => {
       try {
-        const created = await adminCreateEvent(form);
-        setEvents((prev) => [created, ...prev]);
-        setForm(EMPTY_FORM);
-        setShowForm(false);
+        if (editingId) {
+          const updated = await adminUpdateEvent(editingId, form);
+          setEvents((prev) => prev.map((ev) => ev.id === editingId ? updated : ev));
+        } else {
+          const created = await adminCreateEvent(form);
+          setEvents((prev) => [created, ...prev]);
+        }
+        closeForm();
       } catch (e) {
-        setFormError(e instanceof Error ? e.message : 'Erreur lors de la création');
+        setFormError(e instanceof Error ? e.message : 'Erreur');
       }
     });
   }
@@ -92,7 +129,7 @@ export default function EventsPanel() {
     { key: 'category', label: 'Catégorie', width: 'w-28' },
     { key: 'date', label: 'Date', width: 'w-36' },
     { key: 'location', label: 'Lieu' },
-    { key: 'actions', label: '', width: 'w-32' },
+    { key: 'actions', label: '', width: 'w-40' },
   ];
 
   return (
@@ -104,21 +141,23 @@ export default function EventsPanel() {
           <p className="text-brand-light/50 text-xs mt-0.5">{events.length} au total</p>
         </div>
         <Button
-          variant={showForm ? 'secondary' : 'primary'}
+          variant={showForm && !editingId ? 'secondary' : 'primary'}
           size="sm"
-          onClick={() => { setShowForm((v) => !v); setFormError(null); }}
+          onClick={showForm && !editingId ? closeForm : openCreate}
         >
-          {showForm ? 'Annuler' : '+ Nouvel événement'}
+          {showForm && !editingId ? 'Annuler' : '+ Nouvel événement'}
         </Button>
       </div>
 
-      {/* Inline create form */}
+      {/* Form (create or edit) */}
       {showForm && (
         <form
-          onSubmit={handleCreate}
+          onSubmit={handleSubmit}
           className="rounded-xl border border-brand-mid/30 bg-brand-mid/10 p-5 flex flex-col gap-4"
         >
-          <p className="font-pixel text-[10px] uppercase tracking-widest text-brand-accent">Nouvel événement</p>
+          <p className="font-pixel text-[10px] uppercase tracking-widest text-brand-accent">
+            {editingId ? 'Modifier l\'événement' : 'Nouvel événement'}
+          </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input id="title" name="title" label="Titre *" value={form.title} onChange={handleChange} required />
             <Input id="location" name="location" label="Lieu" value={form.location ?? ''} onChange={handleChange} />
@@ -161,21 +200,17 @@ export default function EventsPanel() {
           {formError && <p className="text-red-400 text-xs">{formError}</p>}
           <div className="flex gap-3">
             <Button type="submit" variant="accent" size="sm" disabled={isPending}>
-              {isPending ? 'Création…' : 'Créer l\'événement'}
+              {isPending ? 'Enregistrement…' : editingId ? 'Enregistrer' : 'Créer l\'événement'}
             </Button>
-            <Button type="button" variant="ghost" size="sm" onClick={() => setShowForm(false)}>Annuler</Button>
+            <Button type="button" variant="ghost" size="sm" onClick={closeForm}>Annuler</Button>
           </div>
         </form>
       )}
 
-      {/* Error */}
       {error && (
-        <div className="rounded-lg bg-red-500/10 border border-red-400/20 px-4 py-3 text-red-300 text-sm">
-          {error}
-        </div>
+        <div className="rounded-lg bg-red-500/10 border border-red-400/20 px-4 py-3 text-red-300 text-sm">{error}</div>
       )}
 
-      {/* Table */}
       {loading ? (
         <div className="rounded-xl border border-brand-mid/20 overflow-hidden">
           {[...Array(4)].map((_, i) => (
@@ -205,29 +240,14 @@ export default function EventsPanel() {
               <Td>
                 {deleteConfirm === ev.id ? (
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleDelete(ev.id)}
-                      disabled={isPending}
-                      className="text-xs text-red-400 hover:text-red-300 font-medium disabled:opacity-40"
-                    >
-                      Confirmer
-                    </button>
-                    <button
-                      onClick={() => setDeleteConfirm(null)}
-                      disabled={isPending}
-                      className="text-xs text-brand-light/40 hover:text-brand-light/70 disabled:opacity-40"
-                    >
-                      Annuler
-                    </button>
+                    <button onClick={() => handleDelete(ev.id)} disabled={isPending} className="text-xs text-red-400 hover:text-red-300 font-medium disabled:opacity-40">Confirmer</button>
+                    <button onClick={() => setDeleteConfirm(null)} disabled={isPending} className="text-xs text-brand-light/40 hover:text-brand-light/70 disabled:opacity-40">Annuler</button>
                   </div>
                 ) : (
-                  <button
-                    onClick={() => setDeleteConfirm(ev.id)}
-                    disabled={isPending}
-                    className="text-xs text-brand-light/40 hover:text-red-400 transition-colors duration-150 disabled:opacity-40"
-                  >
-                    Supprimer
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <button onClick={() => openEdit(ev)} disabled={isPending} className="text-xs text-brand-light/50 hover:text-white transition-colors duration-150 disabled:opacity-40">Modifier</button>
+                    <button onClick={() => setDeleteConfirm(ev.id)} disabled={isPending} className="text-xs text-brand-light/40 hover:text-red-400 transition-colors duration-150 disabled:opacity-40">Supprimer</button>
+                  </div>
                 )}
               </Td>
             </>

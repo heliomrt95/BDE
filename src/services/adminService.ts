@@ -198,6 +198,18 @@ export async function adminGetProjects(): Promise<Project[]> {
   return (data ?? []) as Project[];
 }
 
+export async function adminUpdateProject(id: string, project: Partial<ProjectInsert>): Promise<Project> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('projects')
+    .update(project)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw new Error(friendlyError(error));
+  return data as Project;
+}
+
 export async function adminCreateProject(project: ProjectInsert): Promise<Project> {
   const err = validateProject(project);
   if (err) throw new Error(err);
