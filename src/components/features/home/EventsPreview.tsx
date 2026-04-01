@@ -1,17 +1,16 @@
 // src/components/features/home/EventsPreview.tsx
 // ─────────────────────────────────────────────────────
-// Upcoming events — 3-card staggered grid with
-// diagonal accent bar, "see all" link.
+// Horizontal scroll band — events overflow the container
+// for an editorial, non-grid feel. Large watermark title.
 // ─────────────────────────────────────────────────────
 
 'use client';
 
 import Link from 'next/link';
-import SectionTitle from '@/components/ui/SectionTitle';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import { cn } from '@/lib/utils/cn';
-import { FadeIn, Stagger, StaggerItem } from '@/components/motion/ScrollReveal';
+import { FadeIn, SlideIn } from '@/components/motion/ScrollReveal';
 
 /* Placeholder data — will be replaced by API call */
 const MOCK_EVENTS = [
@@ -49,22 +48,27 @@ const categoryVariant: Record<string, 'bde' | 'university' | 'bordeaux'> = {
 
 export default function EventsPreview() {
   return (
-    <section className="relative py-24 md:py-32">
-      {/* Diagonal accent bar background */}
-      <div
-        className="absolute top-0 right-0 w-1/3 h-full opacity-[0.04] -skew-x-12 origin-top-right"
-        style={{ background: 'linear-gradient(180deg, #6f348b 0%, transparent 100%)' }}
-        aria-hidden="true"
-      />
+    <section className="relative py-20 md:py-28 overflow-hidden">
+      {/* Transition line from hero */}
+      <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-brand-mid/40 to-transparent" aria-hidden="true" />
 
-      <div className="relative max-w-7xl mx-auto px-5 md:px-8">
-        {/* Section header */}
+      {/* Large watermark title */}
+      <div className="absolute top-1/2 left-5 md:left-8 -translate-y-1/2 pointer-events-none select-none" aria-hidden="true">
+        <span className="font-display text-[clamp(4rem,10vw,8rem)] leading-none text-white/[0.03] tracking-tight">
+          Events
+        </span>
+      </div>
+
+      {/* Section header */}
+      <div className="relative max-w-7xl mx-auto px-5 md:px-8 mb-10">
         <FadeIn>
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 mb-12">
-            <SectionTitle
-              pixelLabel="À venir"
-              title="Événements"
-            />
+          <div className="flex items-end justify-between gap-6">
+            <div>
+              <span className="pixel-text text-pixel-sm text-brand-accent uppercase tracking-[0.2em] mb-3 block">
+                À venir
+              </span>
+              <h2 className="font-display text-display-lg text-white">Événements</h2>
+            </div>
             <Link
               href="/events"
               className={cn(
@@ -77,20 +81,20 @@ export default function EventsPreview() {
             </Link>
           </div>
         </FadeIn>
+      </div>
 
-        {/* Cards grid — staggered on md+ */}
-        <Stagger className="grid grid-cols-1 md:grid-cols-3 gap-5" stagger={0.12}>
-          {MOCK_EVENTS.map((event, i) => (
-            <StaggerItem key={event.id}>
+      {/* Horizontal scroll band */}
+      <SlideIn from="right" className="relative">
+        <div className="flex gap-5 pl-5 md:pl-8 pr-5 overflow-x-auto scrollbar-hide pb-4 snap-x snap-mandatory">
+          {MOCK_EVENTS.map((event) => (
+            <div
+              key={event.id}
+              className="snap-start shrink-0 w-[min(85vw,380px)]"
+            >
               <Card
                 variant="glass"
                 interactive
-                className={cn(
-                  'group relative',
-                  // Stagger vertical offset on desktop
-                  i === 1 && 'md:mt-8',
-                  i === 2 && 'md:mt-16',
-                )}
+                className="group relative h-full"
               >
                 {/* Accent strip */}
                 <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-brand-accent via-brand-mid to-transparent rounded-l-lg" />
@@ -120,10 +124,26 @@ export default function EventsPreview() {
                   </p>
                 </Card.Body>
               </Card>
-            </StaggerItem>
+            </div>
           ))}
-        </Stagger>
-      </div>
+
+          {/* Ghost card — visual hint that list continues */}
+          <div className="snap-start shrink-0 w-[min(85vw,380px)] flex items-center justify-center">
+            <Link
+              href="/events"
+              className={cn(
+                'flex flex-col items-center gap-3 p-8 rounded-xl',
+                'border border-dashed border-border/50',
+                'text-text-muted hover:text-brand-accent hover:border-brand-accent/30',
+                'transition-all duration-normal',
+              )}
+            >
+              <span className="text-3xl">→</span>
+              <span className="pixel-text text-pixel-sm uppercase tracking-widest">Tous les events</span>
+            </Link>
+          </div>
+        </div>
+      </SlideIn>
     </section>
   );
 }
