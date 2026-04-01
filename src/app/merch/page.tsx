@@ -105,7 +105,7 @@ export default async function MerchPage() {
 
               {/* CTA */}
               <a
-                href="https://instagram.com/bde_mmi_bordeaux"
+                href="https://www.instagram.com/vote4mmi/?hl=fr"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-accent text-brand-dark text-sm font-medium hover:bg-brand-accent/90 transition-colors duration-200"

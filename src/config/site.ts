@@ -6,7 +6,7 @@ export const SITE_CONFIG = {
   description: 'Le site officiel du Bureau des Étudiants du BUT MMI de Bordeaux',
   url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://bde-mmi-bordeaux.fr',
   socials: {
-    instagram: 'https://instagram.com/bde_mmi_bordeaux',
+    instagram: 'https://www.instagram.com/vote4mmi/?hl=fr',
     linkedin: '',
   },
 } as const;
