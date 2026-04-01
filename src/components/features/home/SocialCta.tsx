@@ -33,7 +33,7 @@ export default function SocialCta() {
 
         <FadeIn delay={0.1}>
           <span className="inline-block pixel-text text-pixel-sm text-brand-accent uppercase tracking-[0.2em] mb-3">
-            @bde_mmi_bordeaux
+            @vote4mmi
           </span>
           <p className="text-small text-text-muted mb-10">
             Backstage, projets et moments de promo
