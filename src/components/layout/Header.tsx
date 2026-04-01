@@ -62,7 +62,7 @@ export default function Header() {
             aria-label={mobileOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
             aria-expanded={mobileOpen}
             className={cn(
-              'md:hidden relative w-9 h-9 flex flex-col items-center justify-center gap-[5px] ml-auto',
+              'md:hidden relative w-9 h-9 flex flex-col items-center justify-center gap-[5px] col-start-3 justify-self-end',
               'rounded-md border border-border/30 focus-brand transition-colors duration-fast',
               mobileOpen ? 'bg-white/10 border-white/20' : 'hover:bg-white/5',
             )}

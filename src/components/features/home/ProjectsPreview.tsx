@@ -1,7 +1,7 @@
 // src/components/features/home/ProjectsPreview.tsx
 // ─────────────────────────────────────────────────────
-// Bento grid — title integrated as first grid cell,
-// magazine-style layout. Tags always visible on hero card.
+// Bento grid — title extracted above the grid to free
+// a cell. Stronger hover effects, magazine layout.
 // ─────────────────────────────────────────────────────
 
 'use client';
@@ -9,16 +9,14 @@
 import Link from 'next/link';
 import Badge from '@/components/ui/Badge';
 import { cn } from '@/lib/utils/cn';
-import { Stagger, StaggerItem } from '@/components/motion/ScrollReveal';
+import { FadeIn, Stagger, StaggerItem } from '@/components/motion/ScrollReveal';
 
-/* Placeholder — will come from CMS/API */
 const MOCK_PROJECTS = [
   {
     id: '1',
     title: 'Refonte Musée d\'Aquitaine',
     year: '2025–2026',
     tags: ['UX', 'Web'],
-    thumbnail: '/images/placeholder-project-1.jpg',
     authors: ['Léa M.', 'Hugo T.'],
   },
   {
@@ -26,7 +24,6 @@ const MOCK_PROJECTS = [
     title: 'App Bordeaux Vélo',
     year: '2025–2026',
     tags: ['Mobile', 'UI'],
-    thumbnail: '/images/placeholder-project-2.jpg',
     authors: ['Ines R.'],
   },
   {
@@ -34,7 +31,6 @@ const MOCK_PROJECTS = [
     title: 'Court-métrage "Signal"',
     year: '2024–2025',
     tags: ['Vidéo', 'Motion'],
-    thumbnail: '/images/placeholder-project-3.jpg',
     authors: ['Axel D.', 'Mina K.'],
   },
   {
@@ -42,48 +38,55 @@ const MOCK_PROJECTS = [
     title: 'Identité visuelle Festival',
     year: '2024–2025',
     tags: ['Design', 'Print'],
-    thumbnail: '/images/placeholder-project-4.jpg',
     authors: ['Camille B.'],
   },
 ];
 
+const gradients = [
+  'bg-gradient-to-br from-brand-mid/40 to-brand-dark',
+  'bg-gradient-to-br from-brand-accent/20 to-brand-dark',
+  'bg-gradient-to-br from-[#c0392b]/20 to-brand-dark',
+  'bg-gradient-to-br from-brand-mid/25 to-brand-dark',
+];
+
 export default function ProjectsPreview() {
   return (
-    <section className="relative py-32 md:py-40">
+    <section className="relative py-28 md:py-36">
       <div className="max-w-7xl mx-auto px-5 md:px-8">
-        {/* Bento grid — title is the first cell */}
-        <Stagger
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-[240px]"
-          stagger={0.1}
-        >
-          {/* ── Title cell ── */}
-          <StaggerItem className="sm:col-span-2 flex flex-col justify-end p-6 rounded-xl border border-border/30 bg-gradient-to-br from-surface-raised/40 to-transparent">
-            <span className="pixel-text text-pixel-sm text-brand-accent uppercase tracking-[0.2em] mb-3">
-              Portfolio
-            </span>
-            <h2 className="font-display text-display-lg text-white mb-4">
-              Projets étudiants
-            </h2>
+        {/* ── Section header — outside the grid ── */}
+        <FadeIn>
+          <div className="flex items-end justify-between gap-6 mb-10">
+            <div>
+              <span className="pixel-text text-pixel-sm text-brand-accent uppercase tracking-[0.2em] mb-3 block">
+                Portfolio
+              </span>
+              <h2 className="font-display text-display-lg text-white">
+                Projets étudiants
+              </h2>
+            </div>
             <Link
               href="/portfolio"
               className={cn(
-                'inline-flex items-center gap-1.5 text-small text-brand-accent w-fit',
+                'inline-flex items-center gap-1.5 text-small text-brand-accent',
                 'hover:gap-3 transition-all duration-normal',
                 'focus-brand rounded-sm',
               )}
             >
               Tout voir <span aria-hidden="true">→</span>
             </Link>
-          </StaggerItem>
+          </div>
+        </FadeIn>
 
-          {/* ── Project cards ── */}
+        {/* ── Bento grid ── */}
+        <Stagger
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-[220px]"
+          stagger={0.1}
+        >
           {MOCK_PROJECTS.map((project, i) => (
             <StaggerItem
               key={project.id}
               className={cn(
-                // First project spans 2 rows on large screens
-                i === 0 && 'sm:row-span-2',
-                // Last project spans 2 cols on large screens
+                i === 0 && 'sm:col-span-2 sm:row-span-2',
                 i === 3 && 'lg:col-span-2',
               )}
             >
@@ -99,18 +102,15 @@ export default function ProjectsPreview() {
                 <div
                   className={cn(
                     'absolute inset-0 transition-transform duration-slow ease-smooth',
-                    'group-hover:scale-105',
-                    i === 0 && 'bg-gradient-to-br from-brand-mid/40 to-brand-dark',
-                    i === 1 && 'bg-gradient-to-br from-brand-accent/20 to-brand-dark',
-                    i === 2 && 'bg-gradient-to-br from-[#c0392b]/20 to-brand-dark',
-                    i === 3 && 'bg-gradient-to-br from-brand-mid/25 to-brand-dark',
+                    'group-hover:scale-110',
+                    gradients[i],
                   )}
                 />
 
                 {/* Gradient scrim */}
-                <div className="absolute inset-0 bg-gradient-to-t from-brand-dark via-brand-dark/30 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-brand-dark via-brand-dark/40 to-transparent" />
 
-                {/* Tags — always visible on first project, hover on rest */}
+                {/* Tags — slide in on hover */}
                 <div
                   className={cn(
                     'absolute top-3 right-3 flex flex-wrap gap-1.5 justify-end',
@@ -125,8 +125,8 @@ export default function ProjectsPreview() {
                   ))}
                 </div>
 
-                {/* Info at bottom */}
-                <div className="absolute bottom-0 inset-x-0 p-5">
+                {/* Info — slides up on hover */}
+                <div className="absolute bottom-0 inset-x-0 p-5 translate-y-1 group-hover:translate-y-0 transition-transform duration-normal ease-smooth">
                   <p className="pixel-text text-pixel-sm text-brand-accent uppercase mb-1">
                     {project.year}
                   </p>

@@ -213,6 +213,14 @@
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
+  /* Marquee infinite scroll */
+  .animate-marquee {
+    animation: marquee 30s linear infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .animate-marquee { animation: none; }
+  }
+
   /* Text balance for headings */
   .text-balance { text-wrap: balance; }
 }
@@ -220,4 +228,9 @@
 @keyframes fade-in {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
 }
