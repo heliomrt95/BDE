@@ -17,6 +17,11 @@ function friendlyError(error: { code?: string; message?: string }): string {
   }
 }
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+/** Convert empty string to null for timestamp fields. */
+function ts(v: string | null | undefined): string | null { return v || null; }
+
 // ── Validation helpers ────────────────────────────────────────────────────────
 
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -51,7 +56,7 @@ export async function adminCreateEvent(event: EventInsert): Promise<Event> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from('events')
-    .insert(event)
+    .insert({ ...event, start_date: ts(event.start_date), end_date: ts(event.end_date) })
     .select()
     .single();
   if (error) throw new Error(friendlyError(error));
@@ -62,7 +67,7 @@ export async function adminUpdateEvent(id: string, event: Partial<EventInsert>):
   const supabase = createClient();
   const { data, error } = await supabase
     .from('events')
-    .update(event)
+    .update({ ...event, start_date: ts(event.start_date), end_date: ts(event.end_date) })
     .eq('id', id)
     .select()
     .single();
@@ -97,7 +102,7 @@ export async function adminCreatePost(post: PostInsert): Promise<Post> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from('posts')
-    .insert(post)
+    .insert({ ...post, published_at: ts(post.published_at) })
     .select()
     .single();
   if (error) throw new Error(friendlyError(error));
@@ -108,7 +113,7 @@ export async function adminUpdatePost(id: string, post: Partial<PostInsert>): Pr
   const supabase = createClient();
   const { data, error } = await supabase
     .from('posts')
-    .update(post)
+    .update({ ...post, published_at: ts(post.published_at) })
     .eq('id', id)
     .select()
     .single();
